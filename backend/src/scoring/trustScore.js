@@ -1,15 +1,17 @@
 
-const PROVIDERS = ['grok', 'openai', 'gemini'];
+const PROVIDERS = ['grok', 'openai'];
 
 function validScore(value) {
-  return typeof value === 'number' &&
+  return (
+    typeof value === 'number' &&
     Number.isFinite(value) &&
     value >= 0 &&
-    value <= 100;
+    value <= 100
+  );
 }
 
 function validateWeights(weights) {
-  if (!weights || typeof weights !== 'object') {
+  if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
     throw new Error('Model weights are required.');
   }
 
@@ -30,14 +32,18 @@ function validateWeights(weights) {
   );
 
   if (Math.abs(total - 100) > 0.000001) {
-    throw new Error('Model weights must total exactly 100%.');
+    throw new Error('Grok and OpenAI weights must total 100%.');
   }
 }
 
 export function calculateTrustScore(weights, evidenceScores) {
   validateWeights(weights);
 
-  if (!evidenceScores || typeof evidenceScores !== 'object') {
+  if (
+    !evidenceScores ||
+    typeof evidenceScores !== 'object' ||
+    Array.isArray(evidenceScores)
+  ) {
     throw new Error('Evidence scores are required.');
   }
 
@@ -70,7 +76,11 @@ export function calculateEvidenceScore(evidence) {
   };
 
   const total = evidence.reduce((sum, item) => {
-    if (!item || !(item.status in points)) {
+    if (
+      !item ||
+      typeof item.status !== 'string' ||
+      !Object.prototype.hasOwnProperty.call(points, item.status)
+    ) {
       throw new Error('Evidence contains an invalid status.');
     }
 
