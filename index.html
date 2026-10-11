@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -371,7 +370,7 @@
 
         <p class="description">
           Paste an AI-generated answer below. Trust AI is designed
-          to assess its factual reliability using Grok, OpenAI, and Gemini.
+          to assess its factual reliability using Grok and OpenAI.
         </p>
 
         <form id="reviewForm" novalidate>
@@ -392,10 +391,11 @@
 
           <p class="description">
             Set the importance of each AI manually. Moving one slider
-            will never change another slider. Each AI must receive at
-            least 5%, and all three percentages must add up to 100%.
+            will never change the other slider. Each AI must receive at
+            least 5%, and both percentages must add up to 100%.
           </p>
 
+          <!-- GROK WEIGHT -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="grokWeight">Grok (xAI)</label>
@@ -414,10 +414,11 @@
             <div class="weight-note">Minimum: 5%</div>
           </div>
 
+          <!-- OPENAI WEIGHT -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="openaiWeight">OpenAI</label>
-              <span id="openaiValue" class="weight-value">26%</span>
+              <span id="openaiValue" class="weight-value">50%</span>
             </div>
 
             <input
@@ -426,25 +427,7 @@
               min="5"
               max="100"
               step="1"
-              value="26"
-            />
-
-            <div class="weight-note">Minimum: 5%</div>
-          </div>
-
-          <div class="weight-control">
-            <div class="weight-heading">
-              <label for="geminiWeight">Gemini (Google)</label>
-              <span id="geminiValue" class="weight-value">24%</span>
-            </div>
-
-            <input
-              type="range"
-              id="geminiWeight"
-              min="5"
-              max="100"
-              step="1"
-              value="24"
+              value="50"
             />
 
             <div class="weight-note">Minimum: 5%</div>
@@ -481,7 +464,7 @@
       </div>
     </section>
 
-    <!-- TRUST SCORE PAGE: ONE MAIN SCORE -->
+    <!-- TRUST SCORE PAGE -->
     <section id="trustPage" class="page">
       <div class="panel">
         <h2>Trust Score</h2>
@@ -494,7 +477,6 @@
         <div class="main-trust-box">
           <div class="main-trust-label">Main Trust Score</div>
 
-          <!-- Filled in by real evaluation results later. -->
           <div
             id="overallTrustScore"
             class="main-trust-number"
@@ -506,7 +488,7 @@
       </div>
     </section>
 
-    <!-- EVIDENCE PAGE: ONE BOX PER AI -->
+    <!-- EVIDENCE PAGE -->
     <section id="evidencePage" class="page">
       <div class="panel">
         <h2>Evidence</h2>
@@ -516,7 +498,7 @@
           Confidence Scores are displayed on a 0–100 scale.
         </p>
 
-        <!-- GROK -->
+        <!-- GROK EVIDENCE -->
         <div class="ai-evidence-box">
           <h3>Grok Evidence</h3>
 
@@ -536,7 +518,7 @@
           ></div>
         </div>
 
-        <!-- OPENAI -->
+        <!-- OPENAI EVIDENCE -->
         <div class="ai-evidence-box">
           <h3>OpenAI Evidence</h3>
 
@@ -552,26 +534,6 @@
 
           <div
             id="openaiEvidence"
-            class="evidence-content"
-          ></div>
-        </div>
-
-        <!-- GEMINI -->
-        <div class="ai-evidence-box">
-          <h3>Gemini Evidence</h3>
-
-          <div class="confidence-label">Gemini Confidence Score</div>
-
-          <div
-            id="geminiConfidence"
-            class="confidence-score"
-            aria-live="polite"
-          ></div>
-
-          <div class="evidence-label">Gemini's Evidence</div>
-
-          <div
-            id="geminiEvidence"
             class="evidence-content"
           ></div>
         </div>
@@ -610,8 +572,7 @@
 
     const weightInputs = {
       grok: document.getElementById("grokWeight"),
-      openai: document.getElementById("openaiWeight"),
-      gemini: document.getElementById("geminiWeight")
+      openai: document.getElementById("openaiWeight")
     };
 
     const checkButton = document.getElementById("checkButton");
@@ -623,8 +584,7 @@
     function getWeights() {
       return {
         grok: Number(weightInputs.grok.value),
-        openai: Number(weightInputs.openai.value),
-        gemini: Number(weightInputs.gemini.value)
+        openai: Number(weightInputs.openai.value)
       };
     }
 
@@ -645,10 +605,7 @@
       document.getElementById("openaiValue").textContent =
         weights.openai + "%";
 
-      document.getElementById("geminiValue").textContent =
-        weights.gemini + "%";
-
-      const total = weights.grok + weights.openai + weights.gemini;
+      const total = weights.grok + weights.openai;
       const valid = areWeightsValid(weights);
 
       weightTotal.textContent = total + "%";
@@ -667,6 +624,9 @@
         : "var(--red)";
     }
 
+    // UPDATE TOTAL WHEN EITHER SLIDER MOVES.
+    // Neither slider changes the other slider automatically.
+
     Object.values(weightInputs).forEach(slider => {
       slider.addEventListener("input", () => {
         formMessage.textContent = "";
@@ -674,10 +634,11 @@
       });
     });
 
+    // RESET WEIGHTS TO 50% EACH
+
     document.getElementById("resetWeights").addEventListener("click", () => {
       weightInputs.grok.value = 50;
-      weightInputs.openai.value = 26;
-      weightInputs.gemini.value = 24;
+      weightInputs.openai.value = 50;
 
       formMessage.textContent = "";
       updateWeightStatus();
@@ -698,7 +659,7 @@
         updateWeightStatus();
 
         formMessage.textContent =
-          "Cannot submit: each AI needs at least 5%, and the total must equal 100%.";
+          "Cannot submit: Grok and OpenAI each need at least 5%, and their weights must total 100%.";
 
         return;
       }
@@ -718,7 +679,7 @@
         return;
       }
 
-      const providerNames = ["grok", "openai", "gemini"];
+      const providerNames = ["grok", "openai"];
 
       checkButton.disabled = true;
       formMessage.textContent = "Submitting answer for evaluation...";
@@ -756,6 +717,8 @@
           );
         }
 
+        // VALIDATE BOTH PROVIDER RESULTS
+
         for (const name of providerNames) {
           const provider = data.providers[name];
 
@@ -773,8 +736,12 @@
           }
         }
 
+        // DISPLAY THE OVERALL TRUST SCORE
+
         document.getElementById("overallTrustScore").textContent =
           String(Math.round(data.trustScore));
+
+        // DISPLAY EACH PROVIDER'S CONFIDENCE AND EVIDENCE
 
         for (const name of providerNames) {
           const provider = data.providers[name];
@@ -843,6 +810,10 @@
 
     // RESULTS START BLANK.
     // No scores or evidence are fabricated.
+
+    // INITIALIZE WEIGHT VALIDATION
+
+    updateWeightStatus();
   </script>
 </body>
 </html>
