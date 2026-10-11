@@ -1,4 +1,4 @@
-```js
+
 const PROVIDERS = ['grok', 'openai'];
 
 function isScore(value) {
@@ -10,10 +10,7 @@ function isScore(value) {
   );
 }
 
-export function buildEvaluationResponse({
-  trustScore,
-  providers
-}) {
+export function buildEvaluationResponse({ trustScore, providers }) {
   if (!isScore(trustScore)) {
     throw new Error('A valid Trust Score is required.');
   }
@@ -51,4 +48,3 @@ export function buildEvaluationResponse({
     }
   };
 }
-```
