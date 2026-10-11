@@ -232,55 +232,68 @@
       color: var(--text);
     }
 
-    .score-card,
-    .evidence-card {
-      margin-top: 16px;
-      padding: 18px;
+    /* Main Trust Score */
+
+    .main-trust-box {
+      margin-top: 22px;
+      padding: 35px 20px;
       border: 1px solid var(--border);
-      border-radius: 11px;
+      border-radius: 14px;
+      background: #10182b;
+      text-align: center;
+    }
+
+    .main-trust-label {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .main-trust-number {
+      margin-top: 12px;
+      min-height: 65px;
+      font-size: 3rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    /* Separate AI evidence boxes */
+
+    .ai-evidence-box {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       background: #10182b;
     }
 
-    .score-number {
-      margin: 8px 0;
-      font-size: 2rem;
+    .ai-evidence-box h3 {
+      margin-bottom: 16px;
+    }
+
+    .confidence-label,
+    .evidence-label {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
       font-weight: bold;
     }
 
-    .score-label {
-      color: var(--muted);
-      font-size: 0.9rem;
+    .confidence-score {
+      min-height: 48px;
+      margin-top: 5px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent);
     }
 
-    .score-track {
-      width: 100%;
-      height: 10px;
-      overflow: hidden;
-      border-radius: 99px;
-      background: #2b3650;
-    }
-
-    .score-fill {
-      width: 0%;
-      height: 100%;
-      border-radius: inherit;
-      background: var(--accent);
-      transition: width 0.2s ease;
-    }
-
-    .evidence-list {
-      padding-left: 20px;
-    }
-
-    .evidence-list li {
-      margin-bottom: 10px;
-    }
-
-    .empty-state {
-      padding: 18px;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      color: var(--muted);
+    .evidence-content {
+      min-height: 80px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .status-message {
@@ -362,9 +375,7 @@
         </p>
 
         <form id="reviewForm" novalidate>
-          <label for="answerInput">
-            AI-generated answer
-          </label>
+          <label for="answerInput">AI-generated answer</label>
 
           <textarea
             id="answerInput"
@@ -385,7 +396,6 @@
             least 5%, and all three percentages must add up to 100%.
           </p>
 
-          <!-- GROK -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="grokWeight">Grok (xAI)</label>
@@ -401,12 +411,9 @@
               value="50"
             />
 
-            <div class="weight-note">
-              Minimum: 5%
-            </div>
+            <div class="weight-note">Minimum: 5%</div>
           </div>
 
-          <!-- OPENAI -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="openaiWeight">OpenAI</label>
@@ -422,12 +429,9 @@
               value="26"
             />
 
-            <div class="weight-note">
-              Minimum: 5%
-            </div>
+            <div class="weight-note">Minimum: 5%</div>
           </div>
 
-          <!-- GEMINI -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="geminiWeight">Gemini (Google)</label>
@@ -443,16 +447,10 @@
               value="24"
             />
 
-            <div class="weight-note">
-              Minimum: 5%
-            </div>
+            <div class="weight-note">Minimum: 5%</div>
           </div>
 
-          <div
-            id="weightTotalBox"
-            class="total-box valid"
-            aria-live="polite"
-          >
+          <div id="weightTotalBox" class="total-box valid" aria-live="polite">
             Total: <span id="weightTotal">100%</span>
           </div>
 
@@ -481,118 +479,101 @@
           <p id="formMessage" class="status-message" aria-live="polite"></p>
         </form>
       </div>
-
-      <!-- Intentionally no results panel on the Review page. -->
     </section>
 
-    <!-- TRUST SCORE PAGE -->
+    <!-- TRUST SCORE PAGE: ONE MAIN SCORE -->
     <section id="trustPage" class="page">
       <div class="panel">
         <h2>Trust Score</h2>
 
         <p class="description">
-          The Trust Score is the overall human-facing estimate of
-          an answer's factual reliability. It is intended to combine
-          the model assessments using your selected weights.
+          The overall Trust Score represents the assessed factual
+          reliability of the submitted AI-generated answer.
         </p>
 
-        <div id="trustEmpty" class="empty-state">
-          No evaluation has been completed yet. Go to Review to submit
-          an answer.
-        </div>
+        <div class="main-trust-box">
+          <div class="main-trust-label">Main Trust Score</div>
 
-        <div id="trustResults" hidden>
-          <div class="score-card">
-            <div class="score-label">Overall Trust Score</div>
-            <div id="overallTrustScore" class="score-number">—</div>
-            <div class="score-track">
-              <div id="overallTrustBar" class="score-fill"></div>
-            </div>
-            <p id="trustExplanation" class="description"></p>
-          </div>
+          <!-- Filled in by real evaluation results later. -->
+          <div
+            id="overallTrustScore"
+            class="main-trust-number"
+            aria-live="polite"
+          ></div>
 
-          <div class="score-card">
-            <h3>Grok (xAI)</h3>
-            <div class="score-label">Confidence Score</div>
-            <div id="grokConfidence" class="score-number">—</div>
-            <p class="description">
-              The confidence assessment returned by Grok.
-            </p>
-          </div>
-
-          <div class="score-card">
-            <h3>OpenAI</h3>
-            <div class="score-label">Confidence Score</div>
-            <div id="openaiConfidence" class="score-number">—</div>
-            <p class="description">
-              The confidence assessment returned by OpenAI.
-            </p>
-          </div>
-
-          <div class="score-card">
-            <h3>Gemini (Google)</h3>
-            <div class="score-label">Confidence Score</div>
-            <div id="geminiConfidence" class="score-number">—</div>
-            <p class="description">
-              The confidence assessment returned by Gemini.
-            </p>
-          </div>
+          <div class="weight-note">Out of 100</div>
         </div>
       </div>
     </section>
 
-    <!-- EVIDENCE PAGE -->
+    <!-- EVIDENCE PAGE: ONE BOX PER AI -->
     <section id="evidencePage" class="page">
       <div class="panel">
         <h2>Evidence</h2>
 
         <p class="description">
-          Each AI has a separate evidence section and Evidence Score.
-          Evidence Scores assess the quality and support of the sources
-          and claims provided for an evaluation.
+          Each AI has its own evidence and its own Confidence Score.
+          Confidence Scores are displayed on a 0–100 scale.
         </p>
 
-        <div id="evidenceEmpty" class="empty-state">
-          No evidence is available yet. Complete an evaluation after
-          the backend and provider integrations are connected.
+        <!-- GROK -->
+        <div class="ai-evidence-box">
+          <h3>Grok Evidence</h3>
+
+          <div class="confidence-label">Grok Confidence Score</div>
+
+          <div
+            id="grokConfidence"
+            class="confidence-score"
+            aria-live="polite"
+          ></div>
+
+          <div class="evidence-label">Grok's Evidence</div>
+
+          <div
+            id="grokEvidence"
+            class="evidence-content"
+          ></div>
         </div>
 
-        <div id="evidenceResults" hidden>
-          <!-- GROK EVIDENCE -->
-          <section class="evidence-card">
-            <h3>Grok Evidence</h3>
-            <div class="score-label">Evidence Score</div>
-            <div id="grokEvidenceScore" class="score-number">—</div>
-            <div class="score-track">
-              <div id="grokEvidenceBar" class="score-fill"></div>
-            </div>
-            <h4>Supporting Claims and Sources</h4>
-            <ul id="grokEvidenceList" class="evidence-list"></ul>
-          </section>
+        <!-- OPENAI -->
+        <div class="ai-evidence-box">
+          <h3>OpenAI Evidence</h3>
 
-          <!-- OPENAI EVIDENCE -->
-          <section class="evidence-card">
-            <h3>OpenAI Evidence</h3>
-            <div class="score-label">Evidence Score</div>
-            <div id="openaiEvidenceScore" class="score-number">—</div>
-            <div class="score-track">
-              <div id="openaiEvidenceBar" class="score-fill"></div>
-            </div>
-            <h4>Supporting Claims and Sources</h4>
-            <ul id="openaiEvidenceList" class="evidence-list"></ul>
-          </section>
+          <div class="confidence-label">OpenAI Confidence Score</div>
 
-          <!-- GEMINI EVIDENCE -->
-          <section class="evidence-card">
-            <h3>Gemini Evidence</h3>
-            <div class="score-label">Evidence Score</div>
-            <div id="geminiEvidenceScore" class="score-number">—</div>
-            <div class="score-track">
-              <div id="geminiEvidenceBar" class="score-fill"></div>
-            </div>
-            <h4>Supporting Claims and Sources</h4>
-            <ul id="geminiEvidenceList" class="evidence-list"></ul>
-          </section>
+          <div
+            id="openaiConfidence"
+            class="confidence-score"
+            aria-live="polite"
+          ></div>
+
+          <div class="evidence-label">OpenAI's Evidence</div>
+
+          <div
+            id="openaiEvidence"
+            class="evidence-content"
+          ></div>
+        </div>
+
+        <!-- GEMINI -->
+        <div class="ai-evidence-box">
+          <h3>Gemini Evidence</h3>
+
+          <div class="confidence-label">Gemini Confidence Score</div>
+
+          <div
+            id="geminiConfidence"
+            class="confidence-score"
+            aria-live="polite"
+          ></div>
+
+          <div class="evidence-label">Gemini's Evidence</div>
+
+          <div
+            id="geminiEvidence"
+            class="evidence-content"
+          ></div>
         </div>
       </div>
     </section>
@@ -603,9 +584,7 @@
   </footer>
 
   <script>
-    // -----------------------------------------
     // PAGE NAVIGATION
-    // -----------------------------------------
 
     const navigationButtons = document.querySelectorAll("nav button");
     const pages = document.querySelectorAll(".page");
@@ -627,9 +606,7 @@
       });
     });
 
-    // -----------------------------------------
-    // INDEPENDENT MODEL WEIGHT SLIDERS
-    // -----------------------------------------
+    // INDEPENDENT MODEL WEIGHTS
 
     const weightInputs = {
       grok: document.getElementById("grokWeight"),
@@ -662,8 +639,6 @@
     function updateWeightStatus() {
       const weights = getWeights();
 
-      // Update only the displayed numbers.
-      // Never adjust another slider automatically.
       document.getElementById("grokValue").textContent =
         weights.grok + "%";
 
@@ -681,7 +656,6 @@
       weightTotalBox.classList.toggle("valid", valid);
       weightTotalBox.classList.toggle("invalid", !valid);
 
-      // Prevent checking until the weights are valid.
       checkButton.disabled = !valid;
 
       weightMessage.textContent = valid
@@ -693,7 +667,6 @@
         : "var(--red)";
     }
 
-    // Each slider changes only itself.
     Object.values(weightInputs).forEach(slider => {
       slider.addEventListener("input", () => {
         formMessage.textContent = "";
@@ -701,7 +674,6 @@
       });
     });
 
-    // Reset to the original weights.
     document.getElementById("resetWeights").addEventListener("click", () => {
       weightInputs.grok.value = 50;
       weightInputs.openai.value = 26;
@@ -711,21 +683,17 @@
       updateWeightStatus();
     });
 
-    // -----------------------------------------
-    // EVALUATION SUBMISSION
-    // -----------------------------------------
+    // SUBMISSION VALIDATION
 
     const reviewForm = document.getElementById("reviewForm");
     const answerInput = document.getElementById("answerInput");
 
-    reviewForm.addEventListener("submit", async event => {
+    reviewForm.addEventListener("submit", event => {
       event.preventDefault();
 
       const answer = answerInput.value.trim();
       const weights = getWeights();
 
-      // Enforce weight validation again on submission.
-      // This is independent of the button's disabled state.
       if (!areWeightsValid(weights)) {
         updateWeightStatus();
 
@@ -736,7 +704,9 @@
       }
 
       if (!answer) {
-        formMessage.textContent = "Please paste an AI-generated answer first.";
+        formMessage.textContent =
+          "Please paste an AI-generated answer first.";
+
         answerInput.focus();
         return;
       }
@@ -744,82 +714,17 @@
       if (answer.length > 12000) {
         formMessage.textContent =
           "Your answer must be 12,000 characters or fewer.";
+
         return;
       }
 
-      // No fake scores or evidence are generated here.
-      // The API must be connected before real evaluations can run.
       formMessage.textContent =
-        "Your weights and answer are valid, but the evaluation backend is not connected yet.";
+        "The answer and weights are valid. Connect the backend to run the evaluation.";
     });
 
-    // -----------------------------------------
-    // RESULTS DISPLAY HELPERS
-    // Reserved for real backend results.
-    // -----------------------------------------
-
-    function setScore(elementId, score) {
-      const element = document.getElementById(elementId);
-
-      if (typeof score !== "number" ||
-          !Number.isFinite(score) ||
-          score < 0 ||
-          score > 100) {
-        element.textContent = "Unavailable";
-        return;
-      }
-
-      element.textContent = score + "%";
-    }
-
-    function setScoreBar(elementId, score) {
-      const element = document.getElementById(elementId);
-
-      if (typeof score !== "number" ||
-          !Number.isFinite(score) ||
-          score < 0 ||
-          score > 100) {
-        element.style.width = "0%";
-        return;
-      }
-
-      element.style.width = score + "%";
-    }
-
-    function setEvidenceList(elementId, items) {
-      const list = document.getElementById(elementId);
-      list.replaceChildren();
-
-      if (!Array.isArray(items) || items.length === 0) {
-        const item = document.createElement("li");
-        item.textContent = "No verified evidence has been returned.";
-        list.appendChild(item);
-        return;
-      }
-
-      items.forEach(entry => {
-        const item = document.createElement("li");
-
-        // Render evidence as text, not executable HTML.
-        if (typeof entry === "string") {
-          item.textContent = entry;
-        } else if (entry && typeof entry.claim === "string") {
-          item.textContent = entry.claim;
-
-          if (typeof entry.source === "string") {
-            item.textContent += " — Source: " + entry.source;
-          }
-        } else {
-          item.textContent = "Evidence entry unavailable.";
-        }
-
-        list.appendChild(item);
-      });
-    }
-
-    // A future backend integration can use these helpers to display
-    // genuine returned scores and evidence on the appropriate pages.
-    // They intentionally do not invent results.
+    // RESULTS WILL BE FILLED BY THE BACKEND.
+    // These elements intentionally start blank.
+    // No scores or evidence are fabricated.
   </script>
 </body>
 </html>
