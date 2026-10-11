@@ -1,0 +1,58 @@
+
+const PROVIDERS = ['grok', 'openai', 'gemini'];
+
+function isScore(value) {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= 100
+  );
+}
+
+export function buildEvaluationResponse({
+  trustScore,
+  providers
+}) {
+  if (!isScore(trustScore)) {
+    throw new Error('A valid Trust Score is required.');
+  }
+
+  if (!providers || typeof providers !== 'object') {
+    throw new Error('Provider results are required.');
+  }
+
+  for (const provider of PROVIDERS) {
+    const result = providers[provider];
+
+    if (
+      !result ||
+      !isScore(result.confidenceScore) ||
+      !isScore(result.evidenceScore) ||
+      !Array.isArray(result.evidence)
+    ) {
+      throw new Error(`Invalid results for ${provider}.`);
+    }
+  }
+
+  return {
+    trustScore,
+    providers: {
+      grok: {
+        confidenceScore: providers.grok.confidenceScore,
+        evidenceScore: providers.grok.evidenceScore,
+        evidence: providers.grok.evidence
+      },
+      openai: {
+        confidenceScore: providers.openai.confidenceScore,
+        evidenceScore: providers.openai.evidenceScore,
+        evidence: providers.openai.evidence
+      },
+      gemini: {
+        confidenceScore: providers.gemini.confidenceScore,
+        evidenceScore: providers.gemini.evidenceScore,
+        evidence: providers.gemini.evidence
+      }
+    }
+  };
+}
