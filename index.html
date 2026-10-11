@@ -1,0 +1,884 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d12">
+  <title>Trust AI — AI Answer Verification</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d12;
+      --panel: #11141c;
+      --panel2: #171b25;
+      --line: #252a37;
+      --text: #f1f3f9;
+      --muted: #9299ac;
+      --blue: #8294ff;
+      --green: #5cdda7;
+      --yellow: #f5c66d;
+      --red: #ff808b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% -20%, #202746 0, transparent 48%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.6 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      max-width: 1180px;
+      margin: auto;
+      padding: 28px 24px 60px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 34px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #8d9cff, #5764c7);
+      color: white;
+      font-weight: 900;
+      font-size: 22px;
+      box-shadow: 0 5px 30px #7888ff28;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: -.5px;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid #594b2b;
+      border-radius: 99px;
+      color: var(--yellow);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .hero { padding: 38px 0 26px; }
+
+    .eyebrow {
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .hero h2 {
+      margin: 8px 0;
+      font-size: clamp(29px, 4.5vw, 45px);
+      letter-spacing: -1.8px;
+      line-height: 1.15;
+    }
+
+    .hero p {
+      max-width: 650px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #0f1118;
+      margin: 28px 0 22px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 11px 12px;
+      color: var(--muted);
+      background: transparent;
+      border: 0;
+      border-radius: 9px;
+      font-weight: 650;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      background: var(--panel2);
+    }
+
+    .tab.active {
+      background: #252b40;
+      color: #dfe4ff;
+      box-shadow: inset 0 0 0 1px #3b4566;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, .8fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: linear-gradient(160deg, #141720, #10131a);
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .panel + .panel { margin-top: 18px; }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 7px;
+      background: #202538;
+      color: #b8c2ff;
+      white-space: nowrap;
+    }
+
+    label {
+      display: block;
+      color: #d4d8e4;
+      font-size: 12px;
+      font-weight: 650;
+      margin: 17px 0 8px;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      color: var(--text);
+      background: #0b0e14;
+      border: 1px solid #2b3040;
+      border-radius: 11px;
+      padding: 13px 14px;
+      outline: none;
+      resize: vertical;
+      min-height: 200px;
+    }
+
+    textarea:focus {
+      border-color: #7989ff;
+      box-shadow: 0 0 0 3px #7989ff18;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 7px;
+    }
+
+    .primary {
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(120deg, #8796ff, #6875df);
+      color: #080b18;
+      padding: 12px 18px;
+      font-weight: 800;
+      margin-top: 15px;
+      box-shadow: 0 5px 20px #7888ff1a;
+    }
+
+    .primary:hover { filter: brightness(1.1); }
+
+    .secondary {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel2);
+      color: var(--text);
+      padding: 8px 11px;
+    }
+
+    .full { width: 100%; }
+
+    button:focus-visible {
+      outline: 2px solid #aab4ff;
+      outline-offset: 3px;
+    }
+
+    .model {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .model:last-child { border-bottom: 0; }
+
+    .model-icon {
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: #1c202b;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .model-info { flex: 1; min-width: 0; }
+
+    .model-info strong {
+      display: block;
+      font-size: 12px;
+    }
+
+    .model-info small {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .weight {
+      color: #dce0ff;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #8996ff;
+      cursor: pointer;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .notice {
+      border: 1px solid #4b422c;
+      background: #211d15;
+      border-radius: 11px;
+      color: #d9c69e;
+      padding: 12px;
+      font-size: 12px;
+      margin-top: 17px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .score-layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .score-card {
+      text-align: center;
+      padding: 26px 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #0d1017;
+    }
+
+    .score-ring {
+      width: 150px;
+      height: 150px;
+      margin: 18px auto;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(#8996ff 0deg, #292e40 0deg);
+      position: relative;
+    }
+
+    .score-ring::before {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border-radius: 50%;
+      background: #11141c;
+    }
+
+    .score-number {
+      position: relative;
+      z-index: 1;
+    }
+
+    .score-number strong {
+      display: block;
+      font-size: 39px;
+      line-height: 1.2;
+    }
+
+    .score-number span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .metric {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric:last-child { border: 0; }
+
+    .metric-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .metric-head span:last-child { color: var(--muted); }
+
+    .bar {
+      height: 5px;
+      border-radius: 9px;
+      background: #272c3a;
+      margin-top: 9px;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: #8996ff;
+      border-radius: inherit;
+    }
+
+    .evidence-item {
+      border: 1px solid var(--line);
+      background: #0d1017;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 12px;
+    }
+
+    .evidence-item strong { font-size: 13px; }
+
+    .evidence-item p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 10px;
+      margin-top: 9px;
+    }
+
+    .tag.green { background: #143326; color: var(--green); }
+    .tag.yellow { background: #342b18; color: var(--yellow); }
+    .tag.red { background: #381e27; color: var(--red); }
+
+    .empty {
+      padding: 35px 14px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #303547;
+      border-radius: 12px;
+    }
+
+    .empty strong {
+      display: block;
+      color: #dce0eb;
+      margin-bottom: 6px;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      margin-top: 30px;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 760px) {
+      .app { padding: 18px 14px 40px; }
+      header { align-items: flex-start; }
+      .status { font-size: 10px; }
+      .layout, .score-layout { grid-template-columns: 1fr; }
+      .tabs { gap: 2px; }
+      .tab { padding: 10px 5px; font-size: 12px; }
+      .panel { padding: 17px; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">T</div>
+        <div>
+          <h1>Trust AI</h1>
+          <p>Evidence over confidence.</p>
+        </div>
+      </div>
+      <div class="status">
+        <span class="dot"></span>
+        Prototype mode
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Independent AI evaluation</div>
+      <h2>Is that AI answer<br>actually trustworthy?</h2>
+      <p>
+        Paste an AI-generated answer. Trust AI is designed to assess
+        factual accuracy, examine supporting evidence, identify
+        uncertainty, and explain how much confidence an answer deserves.
+      </p>
+    </section>
+
+    <nav class="tabs" aria-label="Trust AI sections">
+      <button class="tab active" data-view="review">01 &nbsp; Review</button>
+      <button class="tab" data-view="score">02 &nbsp; Trust score</button>
+      <button class="tab" data-view="evidence">03 &nbsp; Evidence</button>
+    </nav>
+
+    <main>
+      <!-- REVIEW TAB -->
+      <section class="view active" id="review">
+        <div class="layout">
+          <div>
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>AI answer review</h3>
+                  <p class="sub">
+                    Paste the answer you want Trust AI to fact-check.
+                  </p>
+                </div>
+                <span class="badge">Input</span>
+              </div>
+
+              <form id="reviewForm">
+                <label for="answer">AI-generated answer</label>
+
+                <textarea
+                  id="answer"
+                  maxlength="12000"
+                  placeholder="Paste the complete AI-generated answer here..."
+                  required
+                ></textarea>
+
+                <p class="hint">
+                  Don't include passwords, API keys, or other private information.
+                </p>
+
+                <button class="primary" type="submit">
+                  Check factual reliability &nbsp; →
+                </button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>Review results</h3>
+                  <p class="sub">
+                    Findings and analysis for the submitted answer.
+                  </p>
+                </div>
+                <span class="badge" id="reviewStatus">Waiting</span>
+              </div>
+
+              <div id="reviewOutput" class="empty">
+                <strong>No answer submitted</strong>
+                Paste an AI-generated answer above to prepare a review.
+              </div>
+            </section>
+          </div>
+
+          <aside>
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>Model weighting</h3>
+                  <p class="sub">
+                    Planned contribution to the evaluation.
+                  </p>
+                </div>
+                <span class="badge">Settings</span>
+              </div>
+
+              <div class="model">
+                <div class="model-icon">X</div>
+                <div class="model-info">
+                  <strong>Grok</strong>
+                  <small>xAI</small>
+                </div>
+                <span class="weight" id="grokValue">50%</span>
+              </div>
+              <input
+                aria-label="Grok weight"
+                id="grokWeight"
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+              >
+
+              <div class="model">
+                <div class="model-icon">G</div>
+                <div class="model-info">
+                  <strong>Gemini</strong>
+                  <small>Google</small>
+                </div>
+                <span class="weight" id="geminiValue">26%</span>
+              </div>
+              <input
+                aria-label="Gemini weight"
+                id="geminiWeight"
+                type="range"
+                min="0"
+                max="100"
+                value="26"
+              >
+
+              <div class="model">
+                <div class="model-icon">O</div>
+                <div class="model-info">
+                  <strong>OpenAI</strong>
+                  <small>OpenAI</small>
+                </div>
+                <span class="weight" id="openaiValue">24%</span>
+              </div>
+              <input
+                aria-label="OpenAI weight"
+                id="openaiWeight"
+                type="range"
+                min="0"
+                max="100"
+                value="24"
+              >
+
+              <div class="range-labels">
+                <span>0%</span>
+                <span>100%</span>
+              </div>
+
+              <div class="notice">
+                Original weights: Grok 50%, Gemini 26%, OpenAI 24%.
+                These are prototype settings and do not yet control
+                real model evaluations.
+              </div>
+
+              <button
+                class="secondary full"
+                id="resetWeights"
+                style="margin-top:14px"
+                type="button"
+              >
+                Reset original weights
+              </button>
+            </section>
+
+            <section class="panel">
+              <h3>Evaluation principles</h3>
+
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Factual accuracy</strong>
+                  <span>Check claims</span>
+                </div>
+              </div>
+
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Supporting evidence</strong>
+                  <span>Check sources</span>
+                </div>
+              </div>
+
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Confidence calibration</strong>
+                  <span>Expose uncertainty</span>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <!-- TRUST SCORE TAB -->
+      <section class="view" id="score">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Trust Factor</h3>
+              <p class="sub">
+                An explainable assessment of factual reliability.
+              </p>
+            </div>
+            <span class="badge">Preview</span>
+          </div>
+
+          <div class="score-layout">
+            <div class="score-card">
+              <p class="sub">Trust Factor</p>
+
+              <div class="score-ring" id="scoreRing">
+                <div class="score-number">
+                  <strong>—</strong>
+                  <span>Not evaluated</span>
+                </div>
+              </div>
+
+              <span class="tag yellow">No verified score yet</span>
+            </div>
+
+            <div>
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Claim verification</strong>
+                  <span>Awaiting evidence</span>
+                </div>
+                <div class="bar"><span></span></div>
+              </div>
+
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Source quality</strong>
+                  <span>Awaiting sources</span>
+                </div>
+                <div class="bar"><span></span></div>
+              </div>
+
+              <div class="metric">
+                <div class="metric-head">
+                  <strong>Confidence calibration</strong>
+                  <span>Not measured</span>
+                </div>
+                <div class="bar"><span></span></div>
+              </div>
+
+              <div class="notice">
+                No real score is calculated yet. Trust AI must examine
+                factual claims and evidence before assigning a meaningful
+                reliability assessment. Agreement between AI models alone
+                does not prove a claim is true.
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- EVIDENCE TAB -->
+      <section class="view" id="evidence">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Evidence explorer</h3>
+              <p class="sub">
+                Examine which claims are supported, contradicted,
+                or still unverified.
+              </p>
+            </div>
+            <span class="badge">Sources</span>
+          </div>
+
+          <div id="evidenceOutput" class="empty">
+            <strong>No evidence collected</strong>
+            Source retrieval and factual claim verification
+            will be connected through the backend.
+          </div>
+
+          <div class="notice">
+            A claim is not verified just because several AI models repeat it.
+            Evaluations should consider credible sources, source dates,
+            contradictory evidence, and unresolved uncertainty.
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <span>Trust AI · Independent AI answer evaluation</span>
+      <span>Prototype only · AI verification not connected</span>
+    </footer>
+  </div>
+
+  <script>
+    // Tab navigation
+    const tabs = document.querySelectorAll('.tab');
+    const views = document.querySelectorAll('.view');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(item => item.classList.remove('active'));
+        views.forEach(view => view.classList.remove('active'));
+
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.view)
+          .classList.add('active');
+      });
+    });
+
+    // Original AI model weights
+    const sliders = {
+      grok: document.getElementById('grokWeight'),
+      gemini: document.getElementById('geminiWeight'),
+      openai: document.getElementById('openaiWeight')
+    };
+
+    function updateWeights() {
+      const total = Object.values(sliders)
+        .reduce((sum, slider) => sum + Number(slider.value), 0);
+
+      for (const [name, slider] of Object.entries(sliders)) {
+        const percentage = total === 0
+          ? 0
+          : Math.round(Number(slider.value) / total * 100);
+
+        document.getElementById(name + 'Value').textContent =
+          percentage + '%';
+      }
+    }
+
+    Object.values(sliders).forEach(slider => {
+      slider.addEventListener('input', updateWeights);
+    });
+
+    document.getElementById('resetWeights')
+      .addEventListener('click', () => {
+        sliders.grok.value = 50;
+        sliders.gemini.value = 26;
+        sliders.openai.value = 24;
+        updateWeights();
+      });
+
+    // Answer submission: preview only, not a real fact-check
+    document.getElementById('reviewForm')
+      .addEventListener('submit', event => {
+        event.preventDefault();
+
+        const answer = document.getElementById('answer')
+          .value.trim();
+
+        if (!answer) return;
+
+        const output = document.getElementById('reviewOutput');
+        output.className = '';
+        output.replaceChildren();
+
+        const heading = document.createElement('strong');
+        heading.textContent = 'Answer ready for fact-checking';
+
+        const answerLabel = document.createElement('p');
+        answerLabel.className = 'sub';
+        answerLabel.style.marginTop = '16px';
+        answerLabel.textContent = 'SUBMITTED AI ANSWER';
+
+        const answerText = document.createElement('p');
+        answerText.style.whiteSpace = 'pre-wrap';
+        answerText.textContent = answer;
+
+        const note = document.createElement('div');
+        note.className = 'notice';
+        note.textContent =
+          'Preview only. This answer has not been fact-checked. ' +
+          'No AI models were called, and no claims or sources were verified.';
+
+        output.append(
+          heading,
+          answerLabel,
+          answerText,
+          note
+        );
+
+        document.getElementById('reviewStatus').textContent =
+          'Ready to check';
+
+        const evidence = document.getElementById('evidenceOutput');
+        evidence.className = 'empty';
+        evidence.replaceChildren();
+
+        const evidenceHeading = document.createElement('strong');
+        evidenceHeading.textContent =
+          'Evidence checking not connected';
+
+        const evidenceNote = document.createElement('p');
+        evidenceNote.textContent =
+          'No claims have been verified and no sources have been checked.';
+
+        evidence.append(evidenceHeading, evidenceNote);
+      });
+
+    updateWeights();
+  </script>
+</body>
+</html>
