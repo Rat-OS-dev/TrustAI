@@ -10,6 +10,7 @@ Do not decide whether a claim is true without evidence.
 
 Return ONLY a valid JSON array of strings.
 If there are no checkable factual claims, return [].
+Do not include markdown or other text.
 `;
 
 export async function extractClaims(answer, queryProvider) {
@@ -38,5 +39,17 @@ export async function extractClaims(answer, queryProvider) {
     throw new Error('Claim extraction returned an invalid claim list.');
   }
 
-  return [...new Set(claims.map((claim) => claim.trim()))];
+  const uniqueClaims = [
+    ...new Set(claims.map((claim) => claim.trim()))
+  ];
+
+  if (uniqueClaims.length === 0) {
+    console.warn(
+      'Claim extraction returned no claims; using the submitted text as a fallback claim.'
+    );
+
+    return [answer.trim()];
+  }
+
+  return uniqueClaims;
 }
