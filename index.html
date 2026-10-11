@@ -685,7 +685,7 @@
       formMessage.textContent = "Submitting answer for evaluation...";
 
       try {
-        const response = await fetch("/api/evaluate", {
+        const response = await fetch("https://trustai-backend-93qs.onrender.com/api/evaluate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
