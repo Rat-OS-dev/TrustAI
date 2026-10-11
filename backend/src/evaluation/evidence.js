@@ -65,5 +65,19 @@ export async function verifyEvidence(claims, queryProvider) {
     throw new Error('Evidence review returned an invalid structure.');
   }
 
+  if (evidence.length === 0) {
+    console.warn(
+      `Evidence review returned no results for ${claims.length} claim(s); marking them unverified.`
+    );
+
+    return claims.map((claim) => ({
+      claim,
+      status: 'unverified',
+      explanation:
+        'The provider returned no evidence assessment for this claim, so it remains unverified.',
+      sources: []
+    }));
+  }
+
   return evidence;
 }
