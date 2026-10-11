@@ -683,12 +683,12 @@
       updateWeightStatus();
     });
 
-    // SUBMISSION VALIDATION
+    // SUBMISSION VALIDATION AND BACKEND CONNECTION
 
     const reviewForm = document.getElementById("reviewForm");
     const answerInput = document.getElementById("answerInput");
 
-    reviewForm.addEventListener("submit", event => {
+    reviewForm.addEventListener("submit", async event => {
       event.preventDefault();
 
       const answer = answerInput.value.trim();
@@ -718,12 +718,130 @@
         return;
       }
 
-      formMessage.textContent =
-        "The answer and weights are valid. Connect the backend to run the evaluation.";
+      const providerNames = ["grok", "openai", "gemini"];
+
+      checkButton.disabled = true;
+      formMessage.textContent = "Submitting answer for evaluation...";
+
+      try {
+        const response = await fetch("/api/evaluate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ answer, weights })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+            data.message ||
+            `Evaluation request failed (${response.status}).`
+          );
+        }
+
+        if (
+          !data ||
+          typeof data.trustScore !== "number" ||
+          !Number.isFinite(data.trustScore) ||
+          data.trustScore < 0 ||
+          data.trustScore > 100 ||
+          !data.providers ||
+          typeof data.providers !== "object"
+        ) {
+          throw new Error(
+            "The backend returned an invalid evaluation result."
+          );
+        }
+
+        for (const name of providerNames) {
+          const provider = data.providers[name];
+
+          if (
+            !provider ||
+            typeof provider.confidenceScore !== "number" ||
+            !Number.isFinite(provider.confidenceScore) ||
+            provider.confidenceScore < 0 ||
+            provider.confidenceScore > 100 ||
+            !Array.isArray(provider.evidence)
+          ) {
+            throw new Error(
+              `The ${name} result is incomplete or invalid.`
+            );
+          }
+        }
+
+        document.getElementById("overallTrustScore").textContent =
+          String(Math.round(data.trustScore));
+
+        for (const name of providerNames) {
+          const provider = data.providers[name];
+
+          document.getElementById(`${name}Confidence`).textContent =
+            String(Math.round(provider.confidenceScore));
+
+          const evidenceText = provider.evidence.map(item => {
+            const claim =
+              item && typeof item.claim === "string"
+                ? item.claim
+                : "Claim not specified";
+
+            const status =
+              item && typeof item.status === "string"
+                ? item.status
+                : "unverified";
+
+            const explanation =
+              item && typeof item.explanation === "string"
+                ? item.explanation
+                : "No explanation provided.";
+
+            const sources =
+              item && Array.isArray(item.sources)
+                ? item.sources.map(source => {
+                    if (!source || typeof source !== "object") {
+                      return "";
+                    }
+
+                    const title =
+                      typeof source.title === "string"
+                        ? source.title
+                        : "Source";
+
+                    const url =
+                      typeof source.url === "string"
+                        ? source.url
+                        : "";
+
+                    return url
+                      ? `  - ${title}: ${url}`
+                      : `  - ${title}`;
+                  }).filter(Boolean).join("\n")
+                : "";
+
+            return `Claim: ${claim}\nStatus: ${status}\nExplanation: ${explanation}` +
+              (sources ? `\nSources:\n${sources}` : "");
+          }).join("\n\n");
+
+          document.getElementById(`${name}Evidence`).textContent =
+            evidenceText || "No evidence details returned.";
+        }
+
+        formMessage.textContent =
+          "Evaluation complete. View the Trust Score and Evidence pages.";
+      } catch (error) {
+        formMessage.textContent =
+          error instanceof Error
+            ? error.message
+            : "Could not complete the evaluation.";
+      } finally {
+        checkButton.disabled = !areWeightsValid(getWeights());
+      }
     });
 
-    // RESULTS WILL BE FILLED BY THE BACKEND.
-    // These elements intentionally start blank.
+    // RESULTS START BLANK.
     // No scores or evidence are fabricated.
   </script>
 </body>
