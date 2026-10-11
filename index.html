@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -406,7 +407,7 @@
               type="range"
               id="grokWeight"
               min="5"
-              max="100"
+              max="95"
               step="1"
               value="50"
             />
@@ -425,7 +426,7 @@
               type="range"
               id="openaiWeight"
               min="5"
-              max="100"
+              max="95"
               step="1"
               value="50"
             />
@@ -592,7 +593,7 @@
       const values = Object.values(weights);
 
       return values.every(value =>
-        Number.isInteger(value) && value >= 5 && value <= 100
+        Number.isInteger(value) && value >= 5 && value <= 95
       ) && values.reduce((sum, value) => sum + value, 0) === 100;
     }
 
@@ -817,3 +818,4 @@
   </script>
 </body>
 </html>
+```
