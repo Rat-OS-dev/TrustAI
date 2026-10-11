@@ -1,5 +1,5 @@
-
-const PROVIDERS = ['grok', 'openai', 'gemini'];
+```js
+const PROVIDERS = ['grok', 'openai'];
 
 function isScore(value) {
   return (
@@ -47,12 +47,8 @@ export function buildEvaluationResponse({
         confidenceScore: providers.openai.confidenceScore,
         evidenceScore: providers.openai.evidenceScore,
         evidence: providers.openai.evidence
-      },
-      gemini: {
-        confidenceScore: providers.gemini.confidenceScore,
-        evidenceScore: providers.gemini.evidenceScore,
-        evidence: providers.gemini.evidence
       }
     }
   };
 }
+```
