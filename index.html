@@ -32,10 +32,49 @@
     }
 
     header {
+      position: relative;
       padding: 28px 20px;
       text-align: center;
       border-bottom: 1px solid var(--border);
       background: #10182b;
+    }
+
+    .account-button {
+      position: absolute;
+      top: 22px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .account-button:hover,
+    .account-button:focus-visible {
+      background: var(--panel-light);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .account-button svg {
+      width: 23px;
+      height: 23px;
+    }
+
+    @media (max-width: 600px) {
+      .account-button {
+        top: 16px;
+        left: 14px;
+        width: 38px;
+        height: 38px;
+      }
     }
 
     header h1 {
@@ -231,8 +270,6 @@
       color: var(--text);
     }
 
-    /* Main Trust Score */
-
     .main-trust-box {
       margin-top: 22px;
       padding: 35px 20px;
@@ -254,8 +291,6 @@
       font-weight: bold;
       color: var(--accent);
     }
-
-    /* Separate AI evidence boxes */
 
     .ai-evidence-box {
       margin-top: 20px;
@@ -331,39 +366,42 @@
 
 <body>
   <header>
+    <a
+      class="account-button"
+      href="account.html"
+      aria-label="Open account settings"
+      title="Account settings"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
+      </svg>
+    </a>
+
     <h1>Trust AI</h1>
     <p>Fact-check claims, statements, and information with AI-assisted evidence.</p>
   </header>
 
   <nav aria-label="Main navigation">
-    <button
-      type="button"
-      class="active"
-      data-page="reviewPage"
-      aria-selected="true"
-    >
+    <button type="button" class="active"
+            data-page="reviewPage" aria-selected="true">
       Fact-check
     </button>
 
-    <button
-      type="button"
-      data-page="trustPage"
-      aria-selected="false"
-    >
+    <button type="button"
+            data-page="trustPage" aria-selected="false">
       Trust Score
     </button>
 
-    <button
-      type="button"
-      data-page="evidencePage"
-      aria-selected="false"
-    >
+    <button type="button"
+            data-page="evidencePage" aria-selected="false">
       Evidence
     </button>
   </nav>
 
   <main>
-    <!-- REVIEW PAGE -->
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
@@ -383,9 +421,7 @@
             required
           ></textarea>
 
-          <p class="weight-note">
-            Maximum 1,000 characters.
-          </p>
+          <p class="weight-note">Maximum 1,000 characters.</p>
 
           <h3>Model Weights</h3>
 
@@ -395,40 +431,26 @@
             least 5%, and both percentages must add up to 100%.
           </p>
 
-          <!-- GROK WEIGHT -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="grokWeight">Grok 4.7 (xAI)</label>
               <span id="grokValue" class="weight-value">50%</span>
             </div>
 
-            <input
-              type="range"
-              id="grokWeight"
-              min="5"
-              max="95"
-              step="1"
-              value="50"
-            />
+            <input type="range" id="grokWeight"
+                   min="5" max="95" step="1" value="50" />
 
             <div class="weight-note">Minimum: 5%</div>
           </div>
 
-          <!-- OPENAI WEIGHT -->
           <div class="weight-control">
             <div class="weight-heading">
               <label for="openaiWeight">GPT-6-sol (OpenAI)</label>
               <span id="openaiValue" class="weight-value">50%</span>
             </div>
 
-            <input
-              type="range"
-              id="openaiWeight"
-              min="5"
-              max="95"
-              step="1"
-              value="50"
-            />
+            <input type="range" id="openaiWeight"
+                   min="5" max="95" step="1" value="50" />
 
             <div class="weight-note">Minimum: 5%</div>
           </div>
@@ -442,19 +464,11 @@
           </p>
 
           <div class="button-row">
-            <button
-              type="submit"
-              id="checkButton"
-              class="primary-button"
-            >
+            <button type="submit" id="checkButton" class="primary-button">
               Fact-check Text
             </button>
 
-            <button
-              type="button"
-              id="resetWeights"
-              class="secondary-button"
-            >
+            <button type="button" id="resetWeights" class="secondary-button">
               Reset Weights
             </button>
           </div>
@@ -464,7 +478,6 @@
       </div>
     </section>
 
-    <!-- TRUST SCORE PAGE -->
     <section id="trustPage" class="page">
       <div class="panel">
         <h2>Trust Score</h2>
@@ -477,18 +490,14 @@
         <div class="main-trust-box">
           <div class="main-trust-label">Main Trust Score</div>
 
-          <div
-            id="overallTrustScore"
-            class="main-trust-number"
-            aria-live="polite"
-          ></div>
+          <div id="overallTrustScore"
+               class="main-trust-number" aria-live="polite"></div>
 
           <div class="weight-note">Out of 100</div>
         </div>
       </div>
     </section>
 
-    <!-- EVIDENCE PAGE -->
     <section id="evidencePage" class="page">
       <div class="panel">
         <h2>Evidence</h2>
@@ -498,52 +507,26 @@
           about claims in the submitted text. Scores use a 0–100 scale.
         </p>
 
-        <!-- GROK EVIDENCE -->
         <div class="ai-evidence-box">
           <h3>Grok Evidence</h3>
-
           <div class="confidence-label">Grok Confidence Score</div>
-
-          <div
-            id="grokConfidence"
-            class="confidence-score"
-            aria-live="polite"
-          ></div>
-
+          <div id="grokConfidence" class="confidence-score" aria-live="polite"></div>
           <div class="evidence-label">Grok's Evidence</div>
-
-          <div
-            id="grokEvidence"
-            class="evidence-content"
-          ></div>
+          <div id="grokEvidence" class="evidence-content"></div>
         </div>
 
-        <!-- OPENAI EVIDENCE -->
         <div class="ai-evidence-box">
           <h3>OpenAI Evidence</h3>
-
           <div class="confidence-label">OpenAI Confidence Score</div>
-
-          <div
-            id="openaiConfidence"
-            class="confidence-score"
-            aria-live="polite"
-          ></div>
-
+          <div id="openaiConfidence" class="confidence-score" aria-live="polite"></div>
           <div class="evidence-label">OpenAI's Evidence</div>
-
-          <div
-            id="openaiEvidence"
-            class="evidence-content"
-          ></div>
+          <div id="openaiEvidence" class="evidence-content"></div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    Trust AI — fact-check claims and information
-  </footer>
+  <footer>Trust AI — fact-check claims and information</footer>
 
   <script>
     // PAGE NAVIGATION
@@ -561,7 +544,6 @@
 
         navigationButtons.forEach(navButton => {
           const isActive = navButton === button;
-
           navButton.classList.toggle("active", isActive);
           navButton.setAttribute("aria-selected", String(isActive));
         });
@@ -624,9 +606,6 @@
         : "var(--red)";
     }
 
-    // UPDATE TOTAL WHEN EITHER SLIDER MOVES.
-    // Neither slider changes the other slider automatically.
-
     Object.values(weightInputs).forEach(slider => {
       slider.addEventListener("input", () => {
         formMessage.textContent = "";
@@ -639,7 +618,6 @@
     document.getElementById("resetWeights").addEventListener("click", () => {
       weightInputs.grok.value = 50;
       weightInputs.openai.value = 50;
-
       formMessage.textContent = "";
       updateWeightStatus();
     });
@@ -657,25 +635,21 @@
 
       if (!areWeightsValid(weights)) {
         updateWeightStatus();
-
         formMessage.textContent =
           "Cannot submit: Grok and OpenAI each need at least 5%, and their weights must total 100%.";
-
         return;
       }
 
       if (!answer) {
         formMessage.textContent =
           "Please type or paste something to fact-check first.";
-
         answerInput.focus();
         return;
       }
 
       if (answer.length > 1000) {
         formMessage.textContent =
-          "Your text must be 1,000 characters or fewer.";
-
+          "Text must be 1,000 characters or fewer.";
         return;
       }
 
@@ -685,13 +659,16 @@
       formMessage.textContent = "Fact-checking your text...";
 
       try {
-        const response = await fetch("https://trustai-backend-93qs.onrender.com/api/evaluate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ answer, weights })
-        });
+        const response = await fetch(
+          "https://trustai-backend-93qs.onrender.com/api/evaluate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ answer, weights })
+          }
+        );
 
         const data = await response.json().catch(() => ({}));
 
@@ -716,8 +693,6 @@
             "The backend returned an invalid evaluation result."
           );
         }
-
-        // VALIDATE BOTH PROVIDER RESULTS
 
         for (const name of providerNames) {
           const provider = data.providers[name];
@@ -810,8 +785,6 @@
 
     // RESULTS START BLANK.
     // No scores or evidence are fabricated.
-
-    // INITIALIZE WEIGHT VALIDATION
 
     updateWeightStatus();
   </script>
