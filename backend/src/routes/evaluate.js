@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 
 import { queryGrok } from '../providers/xai.js';
@@ -69,8 +68,8 @@ function validateRequest(answer, weights) {
     return 'Please provide an answer to evaluate.';
   }
 
-  if (answer.length > 15000) {
-    return 'The answer is too long. Please keep it under 15,000 characters.';
+  if (answer.length > 1000) {
+    return 'Text must be 1,000 characters or fewer.';
   }
 
   if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
