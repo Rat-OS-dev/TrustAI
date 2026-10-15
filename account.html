@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Settings — Trust AI</title>
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141c30;
+      --panel-light: #1b2740;
+      --text: #f3f6ff;
+      --muted: #a8b3ca;
+      --accent: #7c9cff;
+      --green: #40d6a0;
+      --red: #ff737e;
+      --border: #2c3954;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 24px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: #10182b;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: -1px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    main {
+      width: min(620px, 100%);
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+
+    .panel {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.55rem;
+    }
+
+    .description {
+      color: var(--muted);
+    }
+
+    .primary,
+    .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 9px;
+      text-decoration: none;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #0b1020;
+    }
+
+    .secondary {
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .note {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .message {
+      min-height: 24px;
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    .profile-icon {
+      display: flex;
+      width: 62px;
+      height: 62px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--panel-light);
+      color: var(--accent);
+    }
+
+    .profile-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .account-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .detail {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail:last-child {
+      border-bottom: 0;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .detail-value {
+      overflow-wrap: anywhere;
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+
+    .balance {
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #10182b;
+    }
+
+    .balance-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--green);
+    }
+
+    footer {
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      .panel {
+        padding: 18px;
+      }
+
+      main {
+        padding-top: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Trust AI</h1>
+    <p>Account settings</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="account-row">
+        <div class="profile-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.7" stroke-linecap="round"
+               stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
+          </svg>
+        </div>
+
+        <div>
+          <h2 id="headingName">Your account</h2>
+          <p class="description" style="margin:4px 0 0">
+            Trust AI profile
+          </p>
+        </div>
+      </div>
+
+      <div class="balance">
+        <div class="detail-label">Available balance</div>
+
+        <div class="balance-value">
+          Unlimited
+          <span style="font-size:0.8rem">(prototype)</span>
+        </div>
+
+        <p class="note">
+          Real balance tracking and PayPal payments are not connected yet.
+        </p>
+      </div>
+
+      <h3 style="margin-top:24px">Personal information</h3>
+
+      <div class="detail">
+        <div class="detail-label">Name</div>
+        <div class="detail-value" id="accountName">Not set</div>
+      </div>
+
+      <div class="detail">
+        <div class="detail-label">Date of birth</div>
+        <div class="detail-value" id="accountDob">Not set</div>
+      </div>
+
+      <div class="detail">
+        <div class="detail-label">Email</div>
+        <div class="detail-value" id="accountEmail">Not set</div>
+      </div>
+
+      <p
+        class="message"
+        id="accountMessage"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="button-row">
+        <a class="primary" href="index.html">Back to Trust AI</a>
+        <a class="secondary" href="login.html">Switch account / Sign up</a>
+        <button class="secondary" id="logoutButton" type="button">
+          Log out
+        </button>
+      </div>
+
+      <p class="note" style="margin-top:18px">
+        <strong>Prototype notice:</strong>
+        These details are stored in this browser only. This page is not a
+        secure account system. Do not rely on this for real balances, real
+        payments, or private data until backend authentication and a database
+        are added.
+      </p>
+    </section>
+  </main>
+
+  <footer>Trust AI — account prototype</footer>
+
+  <script>
+    const PROFILE_KEY = "trustAIProfile";
+    const SESSION_KEY = "trustAISession";
+    const message = document.getElementById("accountMessage");
+
+    function showDate(value) {
+      if (!value) {
+        return "Not set";
+      }
+
+      const date = new Date(value + "T00:00:00");
+
+      if (Number.isNaN(date.getTime())) {
+        return "Not set";
+      }
+
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+
+    try {
+      const profile = JSON.parse(
+        localStorage.getItem(PROFILE_KEY) || "null"
+      );
+
+      const signedIn =
+        sessionStorage.getItem(SESSION_KEY) === "demo";
+
+      if (!profile || !signedIn) {
+        message.textContent =
+          "Create a demo profile or log in to view account details.";
+
+        window.setTimeout(() => {
+          window.location.href = "login.html";
+        }, 900);
+      } else {
+        document.getElementById("headingName").textContent =
+          profile.name || "Your account";
+
+        document.getElementById("accountName").textContent =
+          profile.name || "Not set";
+
+        document.getElementById("accountDob").textContent =
+          showDate(profile.dob);
+
+        document.getElementById("accountEmail").textContent =
+          profile.email || "Not set";
+      }
+    } catch (error) {
+      message.textContent =
+        "Could not load the demo profile. Please try signing in again.";
+    }
+
+    document.getElementById("logoutButton").addEventListener("click", () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
