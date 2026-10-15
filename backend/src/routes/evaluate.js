@@ -21,8 +21,57 @@ const queryFunctions = {
   openai: queryOpenAI
 };
 
-async function getConfidenceScore(answer, queryProvider) {
+async function getConfidenceScore(answer, evidence, queryProvider) {
   const prompt = `
+Evaluate how confident you are in the quality and correctness
+of YOUR OWN fact-checking evaluation.
+
+IMPORTANT:
+- Do NOT score how trustworthy the original text is.
+- The Trust Score measures the factual reliability of the text.
+- Your Confidence Score measures how confident you are that
+  your own evaluation, evidence review, and conclusions are sound.
+- You may have high confidence that a statement is false.
+- You may have low confidence even when a statement seems plausible.
+- Consider evidence quality, source reliability, coverage, and uncertainty.
+- Never claim that evidence is strong when it is not or claim its not strong when it really is strong.
+
+Submitted text:
+${answer}
+
+Evidence gathered during your evaluation:
+${JSON.stringify(evidence)}
+
+Return ONLY a valid JSON object:
+{"confidenceScore": 75}
+
+confidenceScore must be a number from 0 to 100.
+Do not include markdown or other text.
+`;
+
+  const result = await queryProvider(prompt);
+
+  let parsed;
+
+  try {
+    parsed = JSON.parse(result);
+  } catch {
+    throw new Error('A provider returned an invalid confidence response.');
+  }
+
+  const score = parsed?.confidenceScore;
+
+  if (
+    typeof score !== 'number' ||
+    !Number.isFinite(score) ||
+    score < 0 ||
+    score > 100
+  ) {
+    throw new Error('A provider returned an invalid confidence score.');
+  }
+
+  return score;
+}  const prompt = `
 Assess your confidence in the factual reliability of the answer below.
 
 Consider the accuracy of its factual claims, specificity, uncertainty,
