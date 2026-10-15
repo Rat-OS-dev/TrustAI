@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in or Sign up — Trust AI</title>
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141c30;
+      --panel-light: #1b2740;
+      --text: #f3f6ff;
+      --muted: #a8b3ca;
+      --accent: #7c9cff;
+      --green: #40d6a0;
+      --red: #ff737e;
+      --border: #2c3954;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 24px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: #10182b;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: -1px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    main {
+      width: min(620px, 100%);
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+
+    .panel {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.55rem;
+    }
+
+    .description,
+    .muted {
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      background: #0b1222;
+      color: var(--text);
+      font: inherit;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    .primary,
+    .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 9px;
+      text-decoration: none;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #0b1020;
+    }
+
+    .secondary {
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 18px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .note {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .message {
+      min-height: 24px;
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 18px 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #0b1222;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #0b1020;
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+
+    footer {
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      .panel {
+        padding: 18px;
+      }
+
+      main {
+        padding-top: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Trust AI</h1>
+    <p>Your fact-checking account</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2 id="formTitle">Create your account</h2>
+
+      <p class="description">
+        Set up your Trust AI profile to view your account settings and balance.
+      </p>
+
+      <div class="tabs" role="tablist" aria-label="Account access">
+        <button
+          class="tab active"
+          id="signupTab"
+          type="button"
+          role="tab"
+          aria-selected="true"
+        >
+          Sign up
+        </button>
+
+        <button
+          class="tab"
+          id="loginTab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+        >
+          Log in
+        </button>
+      </div>
+
+      <form id="signupForm">
+        <label for="name">Full name</label>
+        <input
+          id="name"
+          name="name"
+          autocomplete="name"
+          required
+          maxlength="120"
+        />
+
+        <label for="dob">Date of birth</label>
+        <input
+          id="dob"
+          name="dob"
+          type="date"
+          autocomplete="bday"
+          required
+        />
+
+        <label for="signupEmail">Email address</label>
+        <input
+          id="signupEmail"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          maxlength="254"
+        />
+
+        <button class="primary full" type="submit">
+          Create profile
+        </button>
+      </form>
+
+      <form id="loginForm" hidden>
+        <label for="loginEmail">Email address used for your saved profile</label>
+        <input
+          id="loginEmail"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          maxlength="254"
+        />
+
+        <button class="primary full" type="submit">
+          Continue to account
+        </button>
+      </form>
+
+      <p
+        class="message"
+        id="formMessage"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <p class="note">
+        <strong>Prototype notice:</strong>
+        This is a front-end demo only. It saves profile details in this
+        browser and does not provide secure authentication or real payments.
+        Do not use sensitive real information yet. A secure account system
+        needs backend authentication and a database.
+      </p>
+
+      <div class="button-row">
+        <a class="secondary" href="index.html">Back to fact-checker</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>Trust AI — account prototype</footer>
+
+  <script>
+    const PROFILE_KEY = "trustAIProfile";
+    const SESSION_KEY = "trustAISession";
+
+    const signupForm = document.getElementById("signupForm");
+    const loginForm = document.getElementById("loginForm");
+    const signupTab = document.getElementById("signupTab");
+    const loginTab = document.getElementById("loginTab");
+    const formMessage = document.getElementById("formMessage");
+
+    function setMode(mode) {
+      const signup = mode === "signup";
+
+      signupForm.hidden = !signup;
+      loginForm.hidden = signup;
+
+      signupTab.classList.toggle("active", signup);
+      loginTab.classList.toggle("active", !signup);
+
+      signupTab.setAttribute("aria-selected", String(signup));
+      loginTab.setAttribute("aria-selected", String(!signup));
+
+      document.getElementById("formTitle").textContent =
+        signup ? "Create your account" : "Log in";
+
+      formMessage.textContent = "";
+    }
+
+    signupTab.addEventListener("click", () => setMode("signup"));
+    loginTab.addEventListener("click", () => setMode("login"));
+
+    signupForm.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const dob = document.getElementById("dob").value;
+      const email = document.getElementById("signupEmail")
+        .value.trim().toLowerCase();
+
+      if (!name || !dob || !email) {
+        formMessage.textContent = "Please complete all fields.";
+        return;
+      }
+
+      if (new Date(dob) > new Date()) {
+        formMessage.textContent = "Date of birth cannot be in the future.";
+        return;
+      }
+
+      try {
+        localStorage.setItem(
+          PROFILE_KEY,
+          JSON.stringify({ name, dob, email })
+        );
+
+        sessionStorage.setItem(SESSION_KEY, "demo");
+        window.location.href = "account.html";
+      } catch (error) {
+        formMessage.textContent =
+          "Could not save this demo profile in your browser.";
+      }
+    });
+
+    loginForm.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const email = document.getElementById("loginEmail")
+        .value.trim().toLowerCase();
+
+      try {
+        const profile = JSON.parse(
+          localStorage.getItem(PROFILE_KEY) || "null"
+        );
+
+        if (!profile || profile.email !== email) {
+          formMessage.textContent =
+            "No saved demo profile matches that email on this browser. " +
+            "Sign up first or use the browser where you created it.";
+          return;
+        }
+
+        sessionStorage.setItem(SESSION_KEY, "demo");
+        window.location.href = "account.html";
+      } catch (error) {
+        formMessage.textContent =
+          "Could not read the saved demo profile.";
+      }
+    });
+  </script>
+</body>
+</html>
