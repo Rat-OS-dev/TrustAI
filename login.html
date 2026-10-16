@@ -69,8 +69,13 @@
     }
 
     .description,
-    .muted {
+    .muted,
+    .note {
       color: var(--muted);
+    }
+
+    .note {
+      font-size: 0.9rem;
     }
 
     label {
@@ -99,7 +104,6 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
       padding: 11px 16px;
       border: 0;
       border-radius: 9px;
@@ -112,6 +116,11 @@
     .primary {
       background: var(--accent);
       color: #0b1020;
+    }
+
+    .primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .secondary {
@@ -130,17 +139,6 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 16px;
-    }
-
-    .note {
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .message {
-      min-height: 24px;
-      margin-top: 14px;
-      color: var(--muted);
     }
 
     .tabs {
@@ -167,12 +165,31 @@
       font-weight: bold;
     }
 
+    .message {
+      min-height: 24px;
+      margin-top: 14px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+    }
+
+    .message.error {
+      color: var(--red);
+    }
+
+    .message.success {
+      color: var(--green);
+    }
+
     footer {
       padding: 20px;
       text-align: center;
       border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 0.9rem;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     @media (max-width: 600px) {
@@ -198,7 +215,7 @@
       <h2 id="formTitle">Create your account</h2>
 
       <p class="description">
-        Set up your Trust AI profile to view your account settings and balance.
+        Create an account to access your Trust AI profile.
       </p>
 
       <div class="tabs" role="tablist" aria-label="Account access">
@@ -252,13 +269,23 @@
           maxlength="254"
         />
 
-        <button class="primary full" type="submit">
-          Create profile
+        <label for="signupPassword">Password</label>
+        <input
+          id="signupPassword"
+          name="password"
+          type="password"
+          autocomplete="new-password"
+          minlength="8"
+          required
+        />
+
+        <button class="primary full" id="signupButton" type="submit">
+          Create account
         </button>
       </form>
 
       <form id="loginForm" hidden>
-        <label for="loginEmail">Email address used for your saved profile</label>
+        <label for="loginEmail">Email address</label>
         <input
           id="loginEmail"
           name="email"
@@ -268,8 +295,17 @@
           maxlength="254"
         />
 
-        <button class="primary full" type="submit">
-          Continue to account
+        <label for="loginPassword">Password</label>
+        <input
+          id="loginPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+
+        <button class="primary full" id="loginButton" type="submit">
+          Log in
         </button>
       </form>
 
@@ -281,11 +317,9 @@
       ></p>
 
       <p class="note">
-        <strong>Prototype notice:</strong>
-        This is a front-end demo only. It saves profile details in this
-        browser and does not provide secure authentication or real payments.
-        Do not use sensitive real information yet. A secure account system
-        needs backend authentication and a database.
+        Your password is handled by Supabase Authentication. Never share it
+        with anyone. Your profile and balance are stored separately from
+        your sign-in credentials.
       </p>
 
       <div class="button-row">
@@ -294,96 +328,257 @@
     </section>
   </main>
 
-  <footer>Trust AI — account prototype</footer>
+  <footer>Trust AI — account access</footer>
 
-  <script>
-    const PROFILE_KEY = "trustAIProfile";
-    const SESSION_KEY = "trustAISession";
+  <script type="module">
+    import { createClient } from
+      "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL =
+      "https://iirxewgecavovbasafud.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_5Rp10ZaSKUEqlLwjYarvpQ_aVs0yh_p";
+
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
 
     const signupForm = document.getElementById("signupForm");
     const loginForm = document.getElementById("loginForm");
     const signupTab = document.getElementById("signupTab");
     const loginTab = document.getElementById("loginTab");
     const formMessage = document.getElementById("formMessage");
+    const signupButton = document.getElementById("signupButton");
+    const loginButton = document.getElementById("loginButton");
+
+    function showMessage(message, type = "") {
+      formMessage.textContent = message;
+      formMessage.className = "message";
+
+      if (type) {
+        formMessage.classList.add(type);
+      }
+    }
 
     function setMode(mode) {
-      const signup = mode === "signup";
+      const isSignup = mode === "signup";
 
-      signupForm.hidden = !signup;
-      loginForm.hidden = signup;
+      signupForm.hidden = !isSignup;
+      loginForm.hidden = isSignup;
 
-      signupTab.classList.toggle("active", signup);
-      loginTab.classList.toggle("active", !signup);
+      signupTab.classList.toggle("active", isSignup);
+      loginTab.classList.toggle("active", !isSignup);
 
-      signupTab.setAttribute("aria-selected", String(signup));
-      loginTab.setAttribute("aria-selected", String(!signup));
+      signupTab.setAttribute("aria-selected", String(isSignup));
+      loginTab.setAttribute("aria-selected", String(!isSignup));
 
       document.getElementById("formTitle").textContent =
-        signup ? "Create your account" : "Log in";
+        isSignup ? "Create your account" : "Welcome back";
 
-      formMessage.textContent = "";
+      showMessage("");
+    }
+
+    function isValidDateOfBirth(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+      }
+
+      const date = new Date(`${value}T00:00:00.000Z`);
+
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.toISOString().slice(0, 10) === value &&
+        date <= new Date()
+      );
+    }
+
+    async function saveProfile(user, fullName, dateOfBirth) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          date_of_birth: dateOfBirth
+        })
+        .eq("id", user.id)
+        .select("id")
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error(
+          "Your profile record was not created. Please contact support."
+        );
+      }
     }
 
     signupTab.addEventListener("click", () => setMode("signup"));
     loginTab.addEventListener("click", () => setMode("login"));
 
-    signupForm.addEventListener("submit", event => {
+    signupForm.addEventListener("submit", async event => {
       event.preventDefault();
 
-      const name = document.getElementById("name").value.trim();
-      const dob = document.getElementById("dob").value;
+      showMessage("");
+
+      const fullName = document.getElementById("name").value.trim();
+      const dateOfBirth = document.getElementById("dob").value;
       const email = document.getElementById("signupEmail")
         .value.trim().toLowerCase();
+      const password = document.getElementById("signupPassword").value;
 
-      if (!name || !dob || !email) {
-        formMessage.textContent = "Please complete all fields.";
+      if (!fullName || fullName.length > 120) {
+        showMessage("Enter your name using 1–120 characters.", "error");
         return;
       }
 
-      if (new Date(dob) > new Date()) {
-        formMessage.textContent = "Date of birth cannot be in the future.";
+      if (!isValidDateOfBirth(dateOfBirth)) {
+        showMessage("Enter a valid date of birth.", "error");
         return;
       }
 
-      try {
-        localStorage.setItem(
-          PROFILE_KEY,
-          JSON.stringify({ name, dob, email })
-        );
-
-        sessionStorage.setItem(SESSION_KEY, "demo");
-        window.location.href = "account.html";
-      } catch (error) {
-        formMessage.textContent =
-          "Could not save this demo profile in your browser.";
+      if (password.length < 8) {
+        showMessage("Your password must have at least 8 characters.", "error");
+        return;
       }
-    });
 
-    loginForm.addEventListener("submit", event => {
-      event.preventDefault();
-
-      const email = document.getElementById("loginEmail")
-        .value.trim().toLowerCase();
+      signupButton.disabled = true;
+      loginButton.disabled = true;
+      signupButton.textContent = "Creating account...";
 
       try {
-        const profile = JSON.parse(
-          localStorage.getItem(PROFILE_KEY) || "null"
-        );
+        const redirectUrl = new URL(
+          "account.html",
+          window.location.href
+        ).href;
 
-        if (!profile || profile.email !== email) {
-          formMessage.textContent =
-            "No saved demo profile matches that email on this browser. " +
-            "Sign up first or use the browser where you created it.";
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              full_name: fullName,
+              date_of_birth: dateOfBirth
+            }
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data.user) {
+          throw new Error(
+            "Supabase did not return an account. Please try again."
+          );
+        }
+
+        // If email confirmation is disabled, a session may be returned
+        // immediately. Save profile details only when signed in.
+        if (data.session) {
+          await saveProfile(data.user, fullName, dateOfBirth);
+
+          showMessage("Account created. Opening your account...", "success");
+          window.location.href = "account.html";
           return;
         }
 
-        sessionStorage.setItem(SESSION_KEY, "demo");
-        window.location.href = "account.html";
+        showMessage(
+          "Account created. Check your email for the confirmation link. " +
+          "After confirming your email, return here and log in to finish " +
+          "loading your account profile.",
+          "success"
+        );
+
+        setMode("login");
+        document.getElementById("loginEmail").value = email;
       } catch (error) {
-        formMessage.textContent =
-          "Could not read the saved demo profile.";
+        console.error("Sign-up error:", error);
+        showMessage(
+          error instanceof Error
+            ? error.message
+            : "Could not create your account. Please try again.",
+          "error"
+        );
+      } finally {
+        signupButton.disabled = false;
+        loginButton.disabled = false;
+        signupButton.textContent = "Create account";
       }
     });
+
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      showMessage("");
+
+      const email = document.getElementById("loginEmail")
+        .value.trim().toLowerCase();
+      const password = document.getElementById("loginPassword").value;
+
+      loginButton.disabled = true;
+      signupButton.disabled = true;
+      loginButton.textContent = "Logging in...";
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        const user = data.user;
+
+        if (!user) {
+          throw new Error("No authenticated account was returned.");
+        }
+
+        // On email-confirmation flows, user metadata retains the original
+        // registration details. Sync them into the profile after login.
+        const fullName =
+          user.user_metadata?.full_name || "";
+
+        const dateOfBirth =
+          user.user_metadata?.date_of_birth || "";
+
+        if (fullName && isValidDateOfBirth(dateOfBirth)) {
+          await saveProfile(user, fullName, dateOfBirth);
+        }
+
+        window.location.href = "account.html";
+      } catch (error) {
+        console.error("Login error:", error);
+        showMessage(
+          error instanceof Error
+            ? error.message
+            : "Could not log in. Check your details and try again.",
+          "error"
+        );
+      } finally {
+        loginButton.disabled = false;
+        signupButton.disabled = false;
+        loginButton.textContent = "Log in";
+      }
+    });
+
+    // Existing signed-in users can go directly to their account page.
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (sessionData.session) {
+      window.location.href = "account.html";
+    }
+
+    // Restore the appropriate form if a link contains ?mode=login.
+    if (new URLSearchParams(window.location.search).get("mode") === "login") {
+      setMode("login");
+    }
   </script>
 </body>
 </html>
