@@ -68,56 +68,29 @@
       font-size: 1.55rem;
     }
 
-    .description {
+    h3 {
+      margin-top: 24px;
+    }
+
+    .description,
+    .note {
       color: var(--muted);
-    }
-
-    .primary,
-    .secondary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 11px 16px;
-      border: 0;
-      border-radius: 9px;
-      text-decoration: none;
-      font: inherit;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .primary {
-      background: var(--accent);
-      color: #0b1020;
-    }
-
-    .secondary {
-      background: var(--panel-light);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
     }
 
     .note {
       font-size: 0.9rem;
-      color: var(--muted);
     }
 
-    .message {
-      min-height: 24px;
-      margin-top: 14px;
-      color: var(--muted);
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
     }
 
     .profile-icon {
       display: flex;
+      flex-shrink: 0;
       width: 62px;
       height: 62px;
       align-items: center;
@@ -133,11 +106,24 @@
       height: 32px;
     }
 
-    .account-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 22px;
+    .balance-card {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #10182b;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .balance-value {
+      margin-top: 4px;
+      color: var(--green);
+      font-size: 2rem;
+      font-weight: bold;
+      overflow-wrap: anywhere;
     }
 
     .detail {
@@ -149,27 +135,57 @@
       border-bottom: 0;
     }
 
-    .detail-label {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
     .detail-value {
-      overflow-wrap: anywhere;
+      margin-top: 3px;
       font-size: 1.05rem;
       font-weight: bold;
+      overflow-wrap: anywhere;
     }
 
-    .balance {
-      padding: 18px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #10182b;
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
     }
 
-    .balance-value {
-      font-size: 1.8rem;
+    .primary-button,
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 9px;
+      font: inherit;
       font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .primary-button {
+      background: var(--accent);
+      color: #0b1020;
+    }
+
+    .secondary-button {
+      background: var(--panel-light);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .status-message {
+      min-height: 24px;
+      margin-top: 14px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .status-message.error {
+      color: var(--red);
+    }
+
+    .status-message.success {
       color: var(--green);
     }
 
@@ -179,6 +195,10 @@
       border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 0.9rem;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     @media (max-width: 600px) {
@@ -201,95 +221,132 @@
 
   <main>
     <section class="panel">
-      <div class="account-row">
+      <div class="profile-header">
         <div class="profile-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.7" stroke-linecap="round"
-               stroke-linejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <circle cx="12" cy="8" r="4"></circle>
             <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
           </svg>
         </div>
 
         <div>
-          <h2 id="headingName">Your account</h2>
+          <h2 id="headingName">Loading account...</h2>
           <p class="description" style="margin:4px 0 0">
-            Trust AI profile
+            Your Trust AI profile
           </p>
         </div>
       </div>
 
-      <div class="balance">
+      <div class="balance-card">
         <div class="detail-label">Available balance</div>
-
-        <div class="balance-value">
-          Unlimited
-          <span style="font-size:0.8rem">(prototype)</span>
-        </div>
-
-        <p class="note">
-          Real balance tracking and PayPal payments are not connected yet.
+        <div id="accountBalance" class="balance-value">Loading...</div>
+        <p class="note" id="balanceNote">
+          Loading your wallet balance from Trust AI.
         </p>
       </div>
 
-      <h3 style="margin-top:24px">Personal information</h3>
+      <h3>Personal information</h3>
 
       <div class="detail">
         <div class="detail-label">Name</div>
-        <div class="detail-value" id="accountName">Not set</div>
+        <div id="accountName" class="detail-value">Loading...</div>
       </div>
 
       <div class="detail">
         <div class="detail-label">Date of birth</div>
-        <div class="detail-value" id="accountDob">Not set</div>
+        <div id="accountDob" class="detail-value">Loading...</div>
       </div>
 
       <div class="detail">
-        <div class="detail-label">Email</div>
-        <div class="detail-value" id="accountEmail">Not set</div>
+        <div class="detail-label">Email address</div>
+        <div id="accountEmail" class="detail-value">Loading...</div>
       </div>
 
       <p
-        class="message"
         id="accountMessage"
+        class="status-message"
         role="status"
         aria-live="polite"
       ></p>
 
       <div class="button-row">
-        <a class="primary" href="index.html">Back to Trust AI</a>
-        <a class="secondary" href="login.html">Switch account / Sign up</a>
-        <button class="secondary" id="logoutButton" type="button">
+        <a class="primary-button" href="index.html">
+          Back to Trust AI
+        </a>
+
+        <button
+          class="secondary-button"
+          id="refreshButton"
+          type="button"
+        >
+          Refresh account
+        </button>
+
+        <button
+          class="secondary-button"
+          id="logoutButton"
+          type="button"
+        >
           Log out
         </button>
       </div>
 
-      <p class="note" style="margin-top:18px">
-        <strong>Prototype notice:</strong>
-        These details are stored in this browser only. This page is not a
-        secure account system. Do not rely on this for real balances, real
-        payments, or private data until backend authentication and a database
-        are added.
+      <p class="note" style="margin-top:20px">
+        Your wallet balance is managed by Trust AI's backend.
+        Do not share your password or account access token with anyone.
       </p>
     </section>
   </main>
 
-  <footer>Trust AI — account prototype</footer>
+  <footer>Trust AI — account settings</footer>
 
-  <script>
-    const PROFILE_KEY = "trustAIProfile";
-    const SESSION_KEY = "trustAISession";
+  <script type="module">
+    import { createClient } from
+      "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL =
+      "https://iirxewgecavovbasafud.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_5Rp10ZaSKUEqlLwjYarvpQ_aVs0yh_p";
+
+    const BACKEND_URL =
+      "https://trustai-backend-93qs.onrender.com";
+
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
     const message = document.getElementById("accountMessage");
+    const refreshButton = document.getElementById("refreshButton");
+    const logoutButton = document.getElementById("logoutButton");
 
-    function showDate(value) {
+    function showMessage(text, type = "") {
+      message.textContent = text;
+      message.className = "status-message";
+
+      if (type) {
+        message.classList.add(type);
+      }
+    }
+
+    function formatDate(value) {
       if (!value) {
-        return "Not set";
+        return "Not provided";
       }
 
-      const date = new Date(value + "T00:00:00");
+      const date = new Date(`${value}T00:00:00`);
 
       if (Number.isNaN(date.getTime())) {
-        return "Not set";
+        return "Not provided";
       }
 
       return date.toLocaleDateString(undefined, {
@@ -299,43 +356,157 @@
       });
     }
 
-    try {
-      const profile = JSON.parse(
-        localStorage.getItem(PROFILE_KEY) || "null"
-      );
+    function formatBalance(value) {
+      const balance = Number(value);
 
-      const signedIn =
-        sessionStorage.getItem(SESSION_KEY) === "demo";
-
-      if (!profile || !signedIn) {
-        message.textContent =
-          "Create a demo profile or log in to view account details.";
-
-        window.setTimeout(() => {
-          window.location.href = "login.html";
-        }, 900);
-      } else {
-        document.getElementById("headingName").textContent =
-          profile.name || "Your account";
-
-        document.getElementById("accountName").textContent =
-          profile.name || "Not set";
-
-        document.getElementById("accountDob").textContent =
-          showDate(profile.dob);
-
-        document.getElementById("accountEmail").textContent =
-          profile.email || "Not set";
+      if (!Number.isFinite(balance) || balance < 0) {
+        throw new Error("The wallet balance returned by the server is invalid.");
       }
-    } catch (error) {
-      message.textContent =
-        "Could not load the demo profile. Please try signing in again.";
+
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 8
+      }).format(balance);
     }
 
-    document.getElementById("logoutButton").addEventListener("click", () => {
-      sessionStorage.removeItem(SESSION_KEY);
-      window.location.href = "login.html";
+    async function loadAccount() {
+      refreshButton.disabled = true;
+      showMessage("");
+
+      document.getElementById("headingName").textContent =
+        "Loading account...";
+      document.getElementById("accountName").textContent = "Loading...";
+      document.getElementById("accountDob").textContent = "Loading...";
+      document.getElementById("accountEmail").textContent = "Loading...";
+      document.getElementById("accountBalance").textContent = "Loading...";
+      document.getElementById("balanceNote").textContent =
+        "Loading your wallet balance from Trust AI.";
+
+      try {
+        const {
+          data: sessionData,
+          error: sessionError
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        const session = sessionData?.session;
+
+        if (!session?.access_token) {
+          showMessage(
+            "You are not logged in. Redirecting to the login page."
+          );
+
+          window.setTimeout(() => {
+            window.location.href = "login.html?mode=login";
+          }, 800);
+
+          return;
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/account`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Accept": "application/json"
+          }
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            await supabase.auth.signOut();
+
+            window.location.href = "login.html?mode=login";
+            return;
+          }
+
+          throw new Error(
+            data.error || `Could not load account (${response.status}).`
+          );
+        }
+
+        if (
+          !data ||
+          typeof data.email !== "string" ||
+          typeof data.full_name !== "string" ||
+          !Object.prototype.hasOwnProperty.call(data, "balance_usd")
+        ) {
+          throw new Error(
+            "The server returned incomplete account information."
+          );
+        }
+
+        document.getElementById("headingName").textContent =
+          data.full_name || "Your account";
+
+        document.getElementById("accountName").textContent =
+          data.full_name || "Not provided";
+
+        document.getElementById("accountDob").textContent =
+          formatDate(data.date_of_birth);
+
+        document.getElementById("accountEmail").textContent =
+          data.email || "Not provided";
+
+        document.getElementById("accountBalance").textContent =
+          formatBalance(data.balance_usd);
+
+        document.getElementById("balanceNote").textContent =
+          "Your current recorded Trust AI wallet balance.";
+
+        showMessage("Account information loaded successfully.", "success");
+      } catch (error) {
+        console.error("Account loading failed:", error);
+
+        document.getElementById("headingName").textContent =
+          "Account unavailable";
+
+        document.getElementById("accountName").textContent = "Unavailable";
+        document.getElementById("accountDob").textContent = "Unavailable";
+        document.getElementById("accountEmail").textContent = "Unavailable";
+        document.getElementById("accountBalance").textContent = "Unavailable";
+        document.getElementById("balanceNote").textContent =
+          "The account service could not load your balance.";
+
+        showMessage(
+          error instanceof Error
+            ? error.message
+            : "Could not load your account. Please try again.",
+          "error"
+        );
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
+
+    refreshButton.addEventListener("click", loadAccount);
+
+    logoutButton.addEventListener("click", async () => {
+      logoutButton.disabled = true;
+      showMessage("Logging out...");
+
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Logout failed:", error);
+        logoutButton.disabled = false;
+        showMessage(
+          "Could not log out. Please try again.",
+          "error"
+        );
+        return;
+      }
+
+      window.location.href = "login.html?mode=login";
     });
+
+    await loadAccount();
   </script>
 </body>
 </html>
