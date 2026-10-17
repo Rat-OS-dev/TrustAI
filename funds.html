@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Add Funds | Trust AI</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      background: #0b1020;
+      color: #f3f4f6;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .brand {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aab3c5;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #151c30;
+      border: 1px solid #29334b;
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    h1 {
+      font-size: 23px;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #aab3c5;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #39445e;
+      border-radius: 9px;
+      background: #0b1020;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #818cf8;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 9px;
+      background: #6366f1;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #4f46e5;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #message {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    #message.success {
+      display: block;
+      background: #123727;
+      color: #a7f3d0;
+    }
+
+    #message.error {
+      display: block;
+      background: #431b26;
+      color: #fecaca;
+    }
+
+    .back {
+      display: block;
+      margin-top: 22px;
+      text-align: center;
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    .back:hover {
+      text-decoration: underline;
+    }
+
+    .notice {
+      margin-top: 20px;
+      text-align: center;
+      color: #8d98ae;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="brand">Trust AI</div>
+    <div class="subtitle">Your account, your control.</div>
+
+    <section class="card">
+      <h1>Add Funds</h1>
+
+      <p class="description">
+        Have a Trust AI promotional code? Enter it below to redeem
+        eligible promotional credit into your wallet.
+      </p>
+
+      <form id="promoForm">
+        <label for="promoCode">Promotional code</label>
+
+        <input
+          id="promoCode"
+          name="promoCode"
+          type="password"
+          placeholder="Enter your promo code"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          maxlength="200"
+          required
+        >
+
+        <button id="redeemButton" type="submit">
+          Apply Code
+        </button>
+      </form>
+
+      <div id="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <a class="back" href="account.html">
+      ← Back to My Account
+    </a>
+
+    <p class="notice">
+      Promotional credit is subject to eligibility and redemption limits.
+      Payment deposits are not available through this page yet.
+    </p>
+  </main>
+
+  <script>
+    const SUPABASE_URL =
+      'https://iirxewgecavovbasafud.supabase.co';
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      'sb_publishable_5Rp10ZaSKUEqlLwjYarvpQ_aVs0yh_p';
+
+    const API_URL =
+      'https://trustai-backend-93qs.onrender.com';
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    const form = document.getElementById('promoForm');
+    const input = document.getElementById('promoCode');
+    const button = document.getElementById('redeemButton');
+    const message = document.getElementById('message');
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    async function getSession() {
+      const { data, error } =
+        await supabaseClient.auth.getSession();
+
+      if (error) {
+        throw error;
+      }
+
+      return data.session;
+    }
+
+    async function requireLogin() {
+      const session = await getSession();
+
+      if (!session) {
+        window.location.href = 'login.html';
+        return false;
+      }
+
+      return true;
+    }
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const code = input.value.trim();
+
+      if (!code) {
+        showMessage('Please enter a promotional code.', 'error');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Checking Code...';
+      message.className = '';
+      message.style.display = 'none';
+
+      try {
+        const session = await getSession();
+
+        if (!session) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        const response = await fetch(
+          `${API_URL}/api/wallet/redeem-promo`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ code })
+          }
+        );
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            result.error ||
+            'The code could not be redeemed. Please try again.'
+          );
+        }
+
+        input.value = '';
+
+        if (typeof result.balance_usd === 'number') {
+          showMessage(
+            `Success! Promotional credit was added. Your wallet balance is $${result.balance_usd.toFixed(2)}.`,
+            'success'
+          );
+        } else {
+          showMessage(
+            'Success! Your promotional code was redeemed.',
+            'success'
+          );
+        }
+
+      } catch (error) {
+        showMessage(
+          error.message || 'Something went wrong. Please try again.',
+          'error'
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Apply Code';
+      }
+    });
+
+    requireLogin().catch(() => {
+      showMessage(
+        'Unable to verify your login. Please try again.',
+        'error'
+      );
+    });
+  </script>
+</body>
+</html>
