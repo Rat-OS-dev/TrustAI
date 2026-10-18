@@ -168,40 +168,66 @@ async function callAnthropic(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxO
     throw new Error('ANTHROPIC_API_KEY is not configured.');
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: modelId,
-      max_tokens: Number.isInteger(maxOutputTokens) ? maxOutputTokens : 4096,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
+  // Short vote budgets can occasionally produce no visible text. Retry once
+  // with a larger budget, and include usage from both attempts for exact billing.
+  let totalUsage = null;
+  const initialBudget = Number.isInteger(maxOutputTokens) ? maxOutputTokens : 4096;
 
-  const responseText = await response.text();
-  let data;
-  try { data = JSON.parse(responseText); } catch { data = null; }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const budget = attempt === 0 ? initialBudget : Math.max(1024, initialBudget * 4);
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: modelId,
+        max_tokens: budget,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-  if (!response.ok) {
-    const detail = data?.error?.message || responseText || 'No error details returned.';
-    console.error(`Anthropic API error for ${modelId} (${response.status}): ${detail}`);
-    throw new Error(`Anthropic API request failed for ${modelId} (${response.status}).`);
+    const responseText = await response.text();
+    let data;
+    try { data = JSON.parse(responseText); } catch { data = null; }
+
+    if (!response.ok) {
+      const detail = data?.error?.message || responseText || 'No error details returned.';
+      console.error(`Anthropic API error for ${modelId} (${response.status}): ${detail}`);
+      throw new Error(`Anthropic API request failed for ${modelId} (${response.status}).`);
+    }
+
+    if (data?.usage) {
+      if (!totalUsage) {
+        totalUsage = { ...data.usage };
+      } else {
+        for (const key of ['input_tokens', 'output_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens']) {
+          if (Number.isFinite(Number(data.usage[key]))) {
+            totalUsage[key] = (Number(totalUsage[key]) || 0) + Number(data.usage[key]);
+          }
+        }
+      }
+    }
+
+    const result = Array.isArray(data?.content)
+      ? data.content.filter(block => block?.type === 'text').map(block => block.text || '').join('\n')
+      : '';
+
+    if (result.trim()) {
+      return { result, usage: totalUsage || data?.usage };
+    }
+
+    const blockTypes = Array.isArray(data?.content) ? data.content.map(block => block?.type || 'unknown').join(',') : 'none';
+    console.warn(`Anthropic API returned no visible text for ${modelId} (attempt ${attempt + 1}, stop_reason=${data?.stop_reason || 'unknown'}, content_types=${blockTypes}).`);
+    if (attempt === 1) {
+      throw new Error(`${modelId} returned an empty response after retry (stop_reason=${data?.stop_reason || 'unknown'}).`);
+    }
   }
 
-  const result = Array.isArray(data?.content)
-    ? data.content.filter(block => block?.type === 'text').map(block => block.text || '').join('\n')
-    : '';
-
-  if (!result.trim()) {
-    throw new Error(`${modelId} returned an empty response.`);
-  }
-
-  return { result, usage: data?.usage };
+  throw new Error(`${modelId} returned an empty response.`);
 }
 
 /**
