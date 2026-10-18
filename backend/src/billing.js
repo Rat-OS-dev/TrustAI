@@ -1,41 +1,98 @@
 /**
- * Pricing (multi-model):
- * - $0.005 per model for up to 100 characters (minimum per model)
- * - Above 100 characters: $0.005 per 100 characters per model (pro-rated)
- * - Must select at least 2 models → minimum total charge $0.01
+ * Usage-based API billing.
  *
- * Examples (2 models):
- *   50 chars  → 2 × $0.005 = $0.01
- *   100 chars → 2 × $0.005 = $0.01
- *   250 chars → 2 × $0.0125 = $0.025
+ * Rates are USD per 1 million tokens. Keep these aligned with the provider's
+ * official pricing pages. Input/output usage is taken from each API response;
+ * cached input tokens are priced separately where supported.
  *
- * Examples (5 models, 100 chars):
- *   5 × $0.005 = $0.025
+ * This is a billing snapshot, not a live pricing feed. Review rates when
+ * providers change pricing or model IDs.
  */
 
-const RATE_PER_100_PER_MODEL = 0.005;
-const MIN_PER_MODEL = 0.005;
+const MODEL_RATES = {
+  // xAI / Grok: input, cached input, output (USD per 1M tokens)
+  'grok-4.7': { input: 2.00, cachedInput: 0.50, output: 6.00 },
+  'grok-4.6': { input: 2.00, cachedInput: 0.50, output: 6.00 },
+  'grok-4.5': { input: 2.00, cachedInput: 0.30, output: 6.00 },
+  'grok-4.3': { input: 1.25, cachedInput: 0.20, output: 2.50 },
+  // This legacy ID redirects to Grok 4.3 on xAI's API.
+  'grok-4-1-fast-reasoning': { input: 1.25, cachedInput: 0.20, output: 2.50 },
 
-export function calculateCostPerModel(characterCount) {
-  const count = Number(characterCount);
+  // OpenAI: input, cached input, output (USD per 1M tokens)
+  'gpt-5': { input: 1.25, cachedInput: 0.125, output: 10.00 },
+  'gpt-5-mini': { input: 0.25, cachedInput: 0.025, output: 2.00 },
+  'gpt-5-nano': { input: 0.05, cachedInput: 0.005, output: 0.40 },
+  'gpt-4.1': { input: 2.00, cachedInput: 0.50, output: 8.00 },
+  'gpt-4o-mini': { input: 0.15, cachedInput: 0.075, output: 0.60 }
+};
 
-  if (!Number.isFinite(count) || count <= 0) {
-    return MIN_PER_MODEL;
+const LEGACY_RATE_PER_100_PER_MODEL = 0.005;
+const LEGACY_MIN_PER_MODEL = 0.005;
+
+function roundUsd(value) {
+  return Math.round((value + Number.EPSILON) * 1e8) / 1e8;
+}
+
+/**
+ * usage shape: { input_tokens, cached_input_tokens, output_tokens }
+ * Cached input tokens are a subset of input_tokens, not additional tokens.
+ */
+export function calculateModelUsageCost(modelId, usage) {
+  const rates = MODEL_RATES[modelId];
+  if (!rates) {
+    throw new Error(`No API billing rates configured for model: ${modelId}`);
   }
 
-  const raw = (count / 100) * RATE_PER_100_PER_MODEL;
-  const cost = Math.max(MIN_PER_MODEL, raw);
-  return Math.round(cost * 10000) / 10000;
+  const inputTokens = Math.max(0, Number(usage?.input_tokens) || 0);
+  const cachedInputTokens = Math.min(
+    inputTokens,
+    Math.max(0, Number(usage?.cached_input_tokens) || 0)
+  );
+  const outputTokens = Math.max(0, Number(usage?.output_tokens) || 0);
+
+  const regularInputTokens = inputTokens - cachedInputTokens;
+  const cost =
+    (regularInputTokens * rates.input +
+      cachedInputTokens * rates.cachedInput +
+      outputTokens * rates.output) /
+    1_000_000;
+
+  return roundUsd(cost);
+}
+
+export function calculateUsageCost(usageByModel) {
+  const modelCosts = {};
+  let total = 0;
+
+  for (const [modelId, usage] of Object.entries(usageByModel || {})) {
+    const cost = calculateModelUsageCost(modelId, usage);
+    modelCosts[modelId] = cost;
+    total += cost;
+  }
+
+  return {
+    cost_usd: roundUsd(total),
+    model_costs_usd: modelCosts
+  };
+}
+
+/**
+ * Temporary rough preflight estimate used before the APIs are called.
+ * The final charge must use calculateUsageCost() and provider-reported usage.
+ */
+export function calculateCostPerModel(characterCount) {
+  const count = Number(characterCount);
+  if (!Number.isFinite(count) || count <= 0) return LEGACY_MIN_PER_MODEL;
+
+  const raw = (count / 100) * LEGACY_RATE_PER_100_PER_MODEL;
+  return Math.max(LEGACY_MIN_PER_MODEL, Math.round(raw * 10000) / 10000);
 }
 
 export function calculateInputCost(characterCount, modelCount = 2) {
   const models = Math.max(1, Number(modelCount) || 1);
-  const perModel = calculateCostPerModel(characterCount);
-  const total = perModel * models;
-  return Math.round(total * 10000) / 10000;
+  return Math.round(calculateCostPerModel(characterCount) * models * 10000) / 10000;
 }
 
-// Back-compat alias if anything still calls the old name with one arg
 export function calculateLegacyInputCost(characterCount) {
   return calculateInputCost(characterCount, 2);
 }
