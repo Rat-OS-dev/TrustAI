@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { randomInt } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import { makeQueryFunction } from '../providers/query.js';
-import { calculateModelUsageCost } from '../billing.js';
+import {
+  calculateModelUsageCost,
+  calculateTrustyCustomerPrice,
+  getTrustyMarkupPercent
+} from '../billing.js';
 
 const router = Router();
 const MODEL_SET = [
@@ -96,7 +100,8 @@ function estimateTrustyReservation(transcriptText, latestQuestion) {
     total += calculateModelUsageCost(model.id, { input_tokens: tokens(voteChars), output_tokens: 1600 });
     synthesisMax = Math.max(synthesisMax, calculateModelUsageCost(model.id, { input_tokens: tokens(synthesisChars), output_tokens: 2000 }));
   }
-  return Math.round((Math.max(0.01, (total + synthesisMax) * 1.25) + Number.EPSILON) * 1e8) / 1e8;
+  const safetyEstimate = Math.max(0.01, (total + synthesisMax) * 1.25);
+  return calculateTrustyCustomerPrice(safetyEstimate);
 }
 
 async function chargeExactApiCost(userId, cost) {
@@ -203,7 +208,7 @@ router.post('/chat', async (req, res) => {
       }
     );
 
-    // Bill only provider-reported token usage, at configured API rates, with no markup.
+    // Bill provider-reported token usage at configured API rates plus Trusty's tiered markup.
     const usageByModel = {};
     let apiCost = 0;
     for (const model of MODEL_SET) {
@@ -220,8 +225,12 @@ router.post('/chat', async (req, res) => {
     }
     apiCost = Math.round((apiCost + Number.EPSILON) * 1e8) / 1e8;
 
-    const charge = await chargeExactApiCost(userId, apiCost);
+    const markupPercent = getTrustyMarkupPercent(apiCost);
+    const customerCost = calculateTrustyCustomerPrice(apiCost);
+    const charge = await chargeExactApiCost(userId, customerCost);
     return res.json({
+      api_cost_usd: apiCost,
+      markup_percent: markupPercent,
       answer: finalAnswer,
       synthesizer: { id: winner.id, name: winner.name },
       votes: MODEL_SET.map((model) => ({
@@ -232,7 +241,7 @@ router.post('/chat', async (req, res) => {
       tieBreakUsed,
       cost_usd: charge.cost_usd,
       balance_usd: charge.balance_usd,
-      billing: 'Reported API token usage at configured provider rates; no markup.'
+      billing: 'Reported API token usage at configured provider rates plus Trusty markup (20% when API cost is $0.20 or less; 10% above $0.20).'
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Trusty error';
