@@ -128,26 +128,6 @@
       background: #431b26;
       color: #fecaca;
     }
-
-    .back {
-      display: block;
-      margin-top: 22px;
-      text-align: center;
-      color: #a5b4fc;
-      text-decoration: none;
-    }
-
-    .back:hover {
-      text-decoration: underline;
-    }
-
-    .notice {
-      margin-top: 20px;
-      text-align: center;
-      color: #8d98ae;
-      font-size: 12px;
-      line-height: 1.5;
-    }
   </style>
 </head>
 
@@ -187,11 +167,11 @@
       <div id="message" role="status" aria-live="polite"></div>
     </section>
 
-    <a class="back" href="account.html">
+    <a class="back" href="account.html" style="display:block;margin-top:22px;text-align:center;color:#a5b4fc;text-decoration:none">
       ← Back to My Account
     </a>
 
-    <p class="notice">
+    <p class="notice" style="margin-top:20px;text-align:center;color:#8d98ae;font-size:12px;line-height:1.5">
       Promotional credit is subject to eligibility and redemption limits.
       Payment deposits are not available through this page yet.
     </p>
@@ -219,7 +199,14 @@
 
     function showMessage(text, type) {
       message.textContent = text;
-      message.className = type;
+      message.className = type;          // 'success' or 'error'
+      message.style.display = 'block';   // force visible (fixes the blank message bug)
+    }
+
+    function hideMessage() {
+      message.textContent = '';
+      message.className = '';
+      message.style.display = 'none';
     }
 
     async function getSession() {
@@ -256,8 +243,7 @@
 
       button.disabled = true;
       button.textContent = 'Checking Code...';
-      message.className = '';
-      message.style.display = 'none';
+      hideMessage();
 
       try {
         const session = await getSession();
@@ -282,22 +268,8 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          // Backend rejected the code
-          const backendError = result.error || '';
-
-          if (
-            backendError.toLowerCase().includes('invalid') ||
-            backendError.toLowerCase().includes('inactive') ||
-            backendError.toLowerCase().includes('already redeemed') ||
-            backendError.toLowerCase().includes('maximum')
-          ) {
-            showMessage('Promo code failed. ' + backendError, 'error');
-          } else {
-            showMessage(
-              backendError || 'Promo code failed.',
-              'error'
-            );
-          }
+          const backendError = result.error || 'Promo code failed.';
+          showMessage('Promo code failed. ' + backendError, 'error');
           return;
         }
 
