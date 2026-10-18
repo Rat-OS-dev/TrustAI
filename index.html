@@ -25,34 +25,71 @@
     .page { display: none; } .page.active { display: block; }
     .panel { margin-bottom: 22px; padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
     h2 { margin-top: 0; font-size: 1.6rem; } h3 { margin-top: 0; }
-    .description, .muted { color: var(--muted); }
+    .description, .muted, .weight-note { color: var(--muted); }
+    .weight-note { font-size: 0.9rem; }
     label { display: block; margin-bottom: 8px; font-weight: bold; }
-    textarea { display: block; width: 100%; min-height: 220px; resize: vertical; padding: 14px; border: 1px solid var(--border); border-radius: 9px; outline: none; background: #0b1222; color: var(--text); font: inherit; }
-    textarea:focus { border-color: var(--accent); }
-    .weight-control { margin: 22px 0; }
+    textarea, input[type="text"], input[type="search"] {
+      display: block; width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 9px;
+      outline: none; background: #0b1222; color: var(--text); font: inherit;
+    }
+    textarea { min-height: 180px; resize: vertical; }
+    textarea:focus, input:focus { border-color: var(--accent); }
+    .search-row { margin: 12px 0; }
+    .model-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-top: 10px; }
+    .model-option {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px; background: #0b1222; cursor: pointer;
+    }
+    .model-option:hover { border-color: var(--accent); }
+    .model-option.selected { border-color: var(--green); background: #0f1f1a; }
+    .model-option input { margin-top: 3px; }
+    .model-meta { flex: 1; }
+    .model-name { font-weight: bold; }
+    .model-desc { font-size: 0.85rem; color: var(--muted); }
+    .selected-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-radius: 999px; background: var(--panel-light); border: 1px solid var(--border); font-size: 0.9rem;
+    }
+    .chip button {
+      border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 1rem; line-height: 1;
+    }
+    .weight-control { margin: 16px 0; }
     .weight-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
     .weight-heading label { margin: 0; }
     .weight-value { color: var(--accent); font-weight: bold; min-width: 45px; text-align: right; }
-    input[type="range"] { display: block; width: 100%; margin: 12px 0; accent-color: var(--accent); cursor: pointer; }
-    .weight-note { color: var(--muted); font-size: 0.9rem; }
-    .total-box { margin: 22px 0 12px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-light); text-align: center; font-size: 1.15rem; font-weight: bold; }
+    input[type="range"] { display: block; width: 100%; margin: 8px 0; accent-color: var(--accent); cursor: pointer; }
+    .total-box {
+      margin: 16px 0 10px; padding: 14px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--panel-light); text-align: center; font-size: 1.1rem; font-weight: bold;
+    }
     .total-box.valid { border-color: var(--green); } .total-box.invalid { border-color: var(--red); }
-    #weightMessage { min-height: 24px; margin-bottom: 18px; font-size: 0.95rem; }
-    .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-    .primary-button, .secondary-button { padding: 12px 18px; border: 0; border-radius: 9px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .primary-button, .secondary-button {
+      padding: 12px 18px; border: 0; border-radius: 9px; font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
     .primary-button { background: var(--accent); color: #0b1020; }
     .primary-button:disabled { background: #53617c; color: #c4ccda; cursor: not-allowed; opacity: 0.7; }
     .secondary-button { background: var(--panel-light); border: 1px solid var(--border); color: var(--text); }
-    .main-trust-box { margin-top: 22px; padding: 35px 20px; border: 1px solid var(--border); border-radius: 14px; background: #10182b; text-align: center; }
+    .main-trust-box {
+      margin-top: 22px; padding: 35px 20px; border: 1px solid var(--border); border-radius: 14px;
+      background: #10182b; text-align: center;
+    }
     .main-trust-label { color: var(--muted); font-size: 1.1rem; }
     .main-trust-number { margin-top: 12px; min-height: 65px; font-size: 3rem; font-weight: bold; color: var(--accent); }
-    .ai-evidence-box { margin-top: 20px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: #10182b; }
+    .ai-evidence-box {
+      margin-top: 20px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: #10182b;
+    }
     .ai-evidence-box h3 { margin-bottom: 16px; }
     .confidence-label, .evidence-label { margin-top: 18px; color: var(--muted); font-size: 0.95rem; font-weight: bold; }
-    .confidence-score { min-height: 48px; margin-top: 5px; font-size: 1.8rem; font-weight: bold; color: var(--accent); }
-    .evidence-content { min-height: 80px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .confidence-score { min-height: 36px; margin-top: 5px; font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+    .evidence-content {
+      min-height: 60px; padding: 14px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--panel); white-space: pre-wrap; overflow-wrap: anywhere;
+    }
     .status-message { margin-top: 14px; color: var(--muted); }
     footer { padding: 20px; border-top: 1px solid var(--border); color: var(--muted); text-align: center; font-size: 0.9rem; }
+    #costPreview { margin-top: 8px; color: var(--accent); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -64,83 +101,99 @@
       </svg>
     </a>
     <h1>Trust AI</h1>
-    <p>Fact-check claims, statements, and information with AI-assisted evidence.</p>
+    <p>Fact-check claims with multiple AI models.</p>
   </header>
+
   <nav aria-label="Main navigation">
     <button type="button" class="active" data-page="reviewPage" aria-selected="true">Fact-check</button>
     <button type="button" data-page="trustPage" aria-selected="false">Trust Score</button>
     <button type="button" data-page="evidencePage" aria-selected="false">Evidence</button>
   </nav>
+
   <main>
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">Type or paste anything you want fact-checked below. Trust AI uses Grok and OpenAI to assess factual claims and provide supporting evidence.</p>
+        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. Pricing is $0.005 per model per 100 characters (minimum $0.01 total).</p>
+
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
           <textarea id="answerInput" maxlength="12000" placeholder="Type or paste anything you want fact-checked here..." required></textarea>
           <p class="weight-note">Maximum 12,000 characters.</p>
-          <p id="costPreview" class="weight-note" style="margin-top:8px;color:var(--accent);font-weight:bold;">Estimated cost: $0.01</p>
+          <p id="costPreview">Estimated cost: $0.01</p>
+
+          <h3>Models</h3>
+          <p class="description">Search and select models. Minimum 2, maximum 10.</p>
+          <div class="search-row">
+            <input type="search" id="modelSearch" placeholder="Search models (e.g. Grok, GPT-5, mini)..." autocomplete="off" />
+          </div>
+          <div id="selectedChips" class="selected-chips"></div>
+          <div id="modelList" class="model-list"></div>
+          <p id="modelMessage" class="status-message"></p>
+
           <h3>Model Weights</h3>
-          <p class="description">Set the importance of each AI manually. Each AI must receive at least 5%, and both percentages must add up to 100%.</p>
-          <div class="weight-control">
-            <div class="weight-heading"><label for="grokWeight">Grok 4.7 (xAI)</label><span id="grokValue" class="weight-value">50%</span></div>
-            <input type="range" id="grokWeight" min="5" max="95" step="1" value="50" />
-            <div class="weight-note">Minimum: 5%</div>
-          </div>
-          <div class="weight-control">
-            <div class="weight-heading"><label for="openaiWeight">GPT-6-sol (OpenAI)</label><span id="openaiValue" class="weight-value">50%</span></div>
-            <input type="range" id="openaiWeight" min="5" max="95" step="1" value="50" />
-            <div class="weight-note">Minimum: 5%</div>
-          </div>
-          <div id="weightTotalBox" class="total-box valid" aria-live="polite">Total: <span id="weightTotal">100%</span></div>
-          <p id="weightMessage" class="status-message" aria-live="polite">Weights total 100%. You can fact-check the text.</p>
+          <p class="description">Weights must total 100%. Equal split is applied when you change the selection.</p>
+          <div id="weightsContainer"></div>
+          <div id="weightTotalBox" class="total-box valid">Total: <span id="weightTotal">100%</span></div>
+          <p id="weightMessage" class="status-message">Select at least 2 models.</p>
+
           <div class="button-row">
-            <button type="submit" id="checkButton" class="primary-button">Fact-check Text</button>
-            <button type="button" id="resetWeights" class="secondary-button">Reset Weights</button>
+            <button type="submit" id="checkButton" class="primary-button" disabled>Fact-check Text</button>
+            <button type="button" id="resetWeights" class="secondary-button">Equal Weights</button>
           </div>
-          <p id="formMessage" class="status-message" aria-live="polite"></p>
+          <p id="formMessage" class="status-message"></p>
         </form>
       </div>
     </section>
+
     <section id="trustPage" class="page">
       <div class="panel">
         <h2>Trust Score</h2>
-        <p class="description">The overall Trust Score represents the evaluators’ assessment of the factual reliability of the text you submitted.</p>
+        <p class="description">Combined score from the models you selected, using your weights.</p>
         <div class="main-trust-box">
           <div class="main-trust-label">Main Trust Score</div>
-          <div id="overallTrustScore" class="main-trust-number" aria-live="polite"></div>
+          <div id="overallTrustScore" class="main-trust-number"></div>
           <div class="weight-note">Out of 100</div>
         </div>
       </div>
     </section>
+
     <section id="evidencePage" class="page">
       <div class="panel">
         <h2>Evidence</h2>
-        <p class="description">Each evaluator AI provides its own evidence and Confidence Score about claims in the submitted text.</p>
-        <div class="ai-evidence-box">
-          <h3>Grok Evidence</h3>
-          <div class="confidence-label">Grok Confidence Score</div>
-          <div id="grokConfidence" class="confidence-score" aria-live="polite"></div>
-          <div class="evidence-label">Grok's Evidence</div>
-          <div id="grokEvidence" class="evidence-content"></div>
-        </div>
-        <div class="ai-evidence-box">
-          <h3>OpenAI Evidence</h3>
-          <div class="confidence-label">OpenAI Confidence Score</div>
-          <div id="openaiConfidence" class="confidence-score" aria-live="polite"></div>
-          <div class="evidence-label">OpenAI's Evidence</div>
-          <div id="openaiEvidence" class="evidence-content"></div>
-        </div>
+        <p class="description">Evidence is shown only for the models you selected for this check.</p>
+        <div id="evidenceContainer"></div>
       </div>
     </section>
   </main>
-  <footer>Trust AI — fact-check claims and information</footer>
+
+  <footer>Trust AI — multi-model fact-checking</footer>
+
   <script>
     const SUPABASE_URL = "https://iirxewgecavovbasafud.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_5Rp10ZaSKUEqlLwjYarvpQ_aVs0yh_p";
     const BACKEND_URL = "https://trustai-backend-93qs.onrender.com";
+
+    const MODEL_CATALOG = [
+      { id: "grok-4.7", name: "Grok 4.7", family: "xAI", description: "Flagship Grok model" },
+      { id: "grok-4.6", name: "Grok 4.6", family: "xAI", description: "Previous flagship Grok" },
+      { id: "grok-4.5", name: "Grok 4.5", family: "xAI", description: "Strong general Grok model" },
+      { id: "grok-4.3", name: "Grok 4.3", family: "xAI", description: "Long-context Grok model" },
+      { id: "grok-4-1-fast-reasoning", name: "Grok 4 Fast", family: "xAI", description: "Fast, lower-cost Grok" },
+      { id: "gpt-5", name: "GPT-5", family: "OpenAI", description: "Flagship GPT-5" },
+      { id: "gpt-5-mini", name: "GPT-5 mini", family: "OpenAI", description: "Faster, cheaper GPT-5" },
+      { id: "gpt-5-nano", name: "GPT-5 nano", family: "OpenAI", description: "Smallest GPT-5 tier" },
+      { id: "gpt-4.1", name: "GPT-4.1", family: "OpenAI", description: "Strong GPT-4.1 model" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", family: "OpenAI", description: "Fast, affordable GPT-4o" }
+    ];
+
+    const MIN_MODELS = 2;
+    const MAX_MODELS = 10;
+
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    let selected = new Set(["grok-4.7", "gpt-5"]);
+    let weights = { "grok-4.7": 50, "gpt-5": 50 };
 
     async function getSession() {
       const { data, error } = await supabaseClient.auth.getSession();
@@ -156,142 +209,273 @@
       return session;
     }
 
-    const navigationButtons = document.querySelectorAll("nav button");
-    const pages = document.querySelectorAll(".page");
-    navigationButtons.forEach(button => {
+    // Navigation
+    document.querySelectorAll("nav button").forEach(button => {
       button.addEventListener("click", () => {
-        const targetPage = button.dataset.page;
-        pages.forEach(page => page.classList.toggle("active", page.id === targetPage));
-        navigationButtons.forEach(navButton => {
-          const isActive = navButton === button;
-          navButton.classList.toggle("active", isActive);
-          navButton.setAttribute("aria-selected", String(isActive));
+        const target = button.dataset.page;
+        document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === target));
+        document.querySelectorAll("nav button").forEach(b => {
+          const on = b === button;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", String(on));
         });
       });
     });
 
-    function calculateInputCost(charCount) {
-      if (!charCount || charCount <= 0) return 0.01;
-      const raw = (charCount / 100) * 0.01;
-      return Math.max(0.01, Math.round(raw * 10000) / 10000);
+    function calculateInputCost(charCount, modelCount) {
+      const n = Math.max(1, modelCount || 1);
+      const count = Math.max(0, charCount || 0);
+      const perModel = Math.max(0.005, (count / 100) * 0.005);
+      return Math.round(perModel * n * 10000) / 10000;
     }
     function formatCost(cost) {
       return "$" + cost.toFixed(4).replace(/0+$/, "").replace(/\.$/, ".00");
     }
-    const costPreview = document.getElementById("costPreview");
-    function updateCostPreview() {
-      const len = answerInput.value.trim().length;
-      const cost = calculateInputCost(len || 1);
-      if (!answerInput.value.trim()) {
-        costPreview.textContent = "Estimated cost: $0.01 (minimum)";
-      } else {
-        costPreview.textContent = "Estimated cost: " + formatCost(cost) + " (" + len + " characters)";
-      }
-    }
 
-    const weightInputs = {
-      grok: document.getElementById("grokWeight"),
-      openai: document.getElementById("openaiWeight")
-    };
-    const checkButton = document.getElementById("checkButton");
+    const answerInput = document.getElementById("answerInput");
+    const costPreview = document.getElementById("costPreview");
+    const modelSearch = document.getElementById("modelSearch");
+    const modelList = document.getElementById("modelList");
+    const selectedChips = document.getElementById("selectedChips");
+    const modelMessage = document.getElementById("modelMessage");
+    const weightsContainer = document.getElementById("weightsContainer");
     const weightTotal = document.getElementById("weightTotal");
     const weightTotalBox = document.getElementById("weightTotalBox");
     const weightMessage = document.getElementById("weightMessage");
+    const checkButton = document.getElementById("checkButton");
     const formMessage = document.getElementById("formMessage");
+    const evidenceContainer = document.getElementById("evidenceContainer");
 
-    function getWeights() {
-      return { grok: Number(weightInputs.grok.value), openai: Number(weightInputs.openai.value) };
+    function updateCostPreview() {
+      const len = answerInput.value.trim().length;
+      const cost = calculateInputCost(len || 1, Math.max(selected.size, MIN_MODELS));
+      const n = selected.size;
+      costPreview.textContent =
+        "Estimated cost: " + formatCost(cost) +
+        " (" + (len || 0) + " chars × " + n + " model" + (n === 1 ? "" : "s") + ")";
     }
-    function areWeightsValid(weights) {
-      const values = Object.values(weights);
-      return values.every(v => Number.isInteger(v) && v >= 5 && v <= 95) && values.reduce((s, v) => s + v, 0) === 100;
+
+    function equalizeWeights() {
+      const ids = [...selected];
+      if (ids.length === 0) { weights = {}; return; }
+      const base = Math.floor(100 / ids.length);
+      let remainder = 100 - base * ids.length;
+      weights = {};
+      ids.forEach((id, i) => {
+        weights[id] = base + (i < remainder ? 1 : 0);
+      });
     }
-    function updateWeightStatus() {
-      const weights = getWeights();
-      document.getElementById("grokValue").textContent = weights.grok + "%";
-      document.getElementById("openaiValue").textContent = weights.openai + "%";
-      const total = weights.grok + weights.openai;
-      const valid = areWeightsValid(weights);
+
+    function weightsValid() {
+      const ids = [...selected];
+      if (ids.length < MIN_MODELS || ids.length > MAX_MODELS) return false;
+      const total = ids.reduce((s, id) => s + (Number(weights[id]) || 0), 0);
+      return total === 100 && ids.every(id => Number(weights[id]) > 0);
+    }
+
+    function updateWeightUI() {
+      const ids = [...selected];
+      weightsContainer.innerHTML = "";
+
+      ids.forEach(id => {
+        const meta = MODEL_CATALOG.find(m => m.id === id);
+        const val = Number(weights[id]) || 0;
+        const row = document.createElement("div");
+        row.className = "weight-control";
+        row.innerHTML =
+          '<div class="weight-heading">' +
+            '<label for="w-' + id + '">' + (meta ? meta.name : id) + '</label>' +
+            '<span class="weight-value" id="wv-' + id + '">' + val + '%</span>' +
+          '</div>' +
+          '<input type="range" id="w-' + id + '" min="1" max="95" step="1" value="' + val + '" />';
+        weightsContainer.appendChild(row);
+
+        const slider = row.querySelector("input");
+        slider.addEventListener("input", () => {
+          weights[id] = Number(slider.value);
+          document.getElementById("wv-" + id).textContent = weights[id] + "%";
+          refreshStatus();
+        });
+      });
+
+      refreshStatus();
+    }
+
+    function refreshStatus() {
+      const ids = [...selected];
+      const total = ids.reduce((s, id) => s + (Number(weights[id]) || 0), 0);
+      const valid = weightsValid();
+
       weightTotal.textContent = total + "%";
       weightTotalBox.classList.toggle("valid", valid);
       weightTotalBox.classList.toggle("invalid", !valid);
+
+      if (ids.length < MIN_MODELS) {
+        weightMessage.textContent = "Select at least " + MIN_MODELS + " models.";
+        weightMessage.style.color = "var(--red)";
+        modelMessage.textContent = "Pick at least " + MIN_MODELS + " models.";
+      } else if (ids.length > MAX_MODELS) {
+        weightMessage.textContent = "Maximum " + MAX_MODELS + " models.";
+        weightMessage.style.color = "var(--red)";
+      } else if (!valid) {
+        weightMessage.textContent = "Adjust weights so they total exactly 100%.";
+        weightMessage.style.color = "var(--red)";
+        modelMessage.textContent = ids.length + " models selected.";
+      } else {
+        weightMessage.textContent = "Weights total 100%. Ready to fact-check.";
+        weightMessage.style.color = "var(--green)";
+        modelMessage.textContent = ids.length + " models selected.";
+      }
+
       checkButton.disabled = !valid;
-      weightMessage.textContent = valid
-        ? "Weights total 100%. You can fact-check the text."
-        : "Adjust the sliders manually. Each AI needs at least 5%, and the total must equal exactly 100%.";
-      weightMessage.style.color = valid ? "var(--green)" : "var(--red)";
+      updateCostPreview();
+      renderChips();
     }
-    Object.values(weightInputs).forEach(slider => {
-      slider.addEventListener("input", () => { formMessage.textContent = ""; updateWeightStatus(); });
-    });
-    document.getElementById("resetWeights").addEventListener("click", () => {
-      weightInputs.grok.value = 50; weightInputs.openai.value = 50;
-      formMessage.textContent = ""; updateWeightStatus();
-    });
 
-    const reviewForm = document.getElementById("reviewForm");
-    const answerInput = document.getElementById("answerInput");
+    function renderChips() {
+      selectedChips.innerHTML = "";
+      [...selected].forEach(id => {
+        const meta = MODEL_CATALOG.find(m => m.id === id);
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.innerHTML = (meta ? meta.name : id) +
+          ' <button type="button" aria-label="Remove">×</button>';
+        chip.querySelector("button").addEventListener("click", () => {
+          selected.delete(id);
+          delete weights[id];
+          equalizeWeights();
+          renderModelList(modelSearch.value);
+          updateWeightUI();
+        });
+        selectedChips.appendChild(chip);
+      });
+    }
+
+    function renderModelList(filter) {
+      const q = (filter || "").trim().toLowerCase();
+      modelList.innerHTML = "";
+
+      MODEL_CATALOG.filter(m => {
+        if (!q) return true;
+        return (
+          m.name.toLowerCase().includes(q) ||
+          m.id.toLowerCase().includes(q) ||
+          m.family.toLowerCase().includes(q) ||
+          m.description.toLowerCase().includes(q)
+        );
+      }).forEach(m => {
+        const row = document.createElement("label");
+        row.className = "model-option" + (selected.has(m.id) ? " selected" : "");
+        row.innerHTML =
+          '<input type="checkbox" ' + (selected.has(m.id) ? "checked" : "") + ' />' +
+          '<div class="model-meta">' +
+            '<div class="model-name">' + m.name + ' <span class="weight-note">(' + m.family + ')</span></div>' +
+            '<div class="model-desc">' + m.description + '</div>' +
+          '</div>';
+        const box = row.querySelector("input");
+        box.addEventListener("change", () => {
+          if (box.checked) {
+            if (selected.size >= MAX_MODELS) {
+              box.checked = false;
+              modelMessage.textContent = "Maximum " + MAX_MODELS + " models.";
+              return;
+            }
+            selected.add(m.id);
+          } else {
+            selected.delete(m.id);
+            delete weights[m.id];
+          }
+          equalizeWeights();
+          renderModelList(modelSearch.value);
+          updateWeightUI();
+        });
+        modelList.appendChild(row);
+      });
+    }
+
+    modelSearch.addEventListener("input", () => renderModelList(modelSearch.value));
     answerInput.addEventListener("input", updateCostPreview);
-    updateCostPreview();
+    document.getElementById("resetWeights").addEventListener("click", () => {
+      equalizeWeights();
+      updateWeightUI();
+    });
 
-    reviewForm.addEventListener("submit", async event => {
+    document.getElementById("reviewForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const answer = answerInput.value.trim();
-      const weights = getWeights();
-      if (!areWeightsValid(weights)) {
-        updateWeightStatus();
-        formMessage.textContent = "Cannot submit: Grok and OpenAI each need at least 5%, and their weights must total 100%.";
+      const models = [...selected];
+
+      if (!weightsValid()) {
+        formMessage.textContent = "Select at least 2 models and make weights total 100%.";
         return;
       }
       if (!answer) {
-        formMessage.textContent = "Please type or paste something to fact-check first.";
-        answerInput.focus();
+        formMessage.textContent = "Please enter text to fact-check.";
         return;
       }
       if (answer.length > 12000) {
         formMessage.textContent = "Text must be 12,000 characters or fewer.";
         return;
       }
-      const providerNames = ["grok", "openai"];
+
       checkButton.disabled = true;
-      formMessage.textContent = "Fact-checking your text...";
+      formMessage.textContent = "Fact-checking with " + models.length + " models...";
+
       try {
         const session = await requireLogin();
         if (!session) return;
-        const response = await fetch(`${BACKEND_URL}/api/evaluate`, {
+
+        const weightPayload = {};
+        models.forEach(id => { weightPayload[id] = Number(weights[id]); });
+
+        const response = await fetch(BACKEND_URL + "/api/evaluate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`
+            "Authorization": "Bearer " + session.access_token
           },
-          body: JSON.stringify({ answer, weights })
+          body: JSON.stringify({ answer, models, weights: weightPayload })
         });
+
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(data.error || data.message || `Evaluation request failed (${response.status}).`);
+          throw new Error(data.error || data.message || "Evaluation failed (" + response.status + ").");
         }
+
         if (!data || typeof data.trustScore !== "number" || !data.providers) {
-          throw new Error("The backend returned an invalid evaluation result.");
+          throw new Error("Invalid evaluation result.");
         }
-        for (const name of providerNames) {
-          const provider = data.providers[name];
-          if (!provider || typeof provider.confidenceScore !== "number" || !Array.isArray(provider.evidence)) {
-            throw new Error(`The ${name} result is incomplete or invalid.`);
-          }
-        }
-        document.getElementById("overallTrustScore").textContent = String(Math.round(data.trustScore));
-        for (const name of providerNames) {
-          const provider = data.providers[name];
-          document.getElementById(`${name}Confidence`).textContent = String(Math.round(provider.confidenceScore));
-          const evidenceText = provider.evidence.map(item => {
+
+        document.getElementById("overallTrustScore").textContent =
+          String(Math.round(data.trustScore));
+
+        // Evidence only for selected models returned
+        evidenceContainer.innerHTML = "";
+        const providerIds = Object.keys(data.providers);
+        providerIds.forEach(id => {
+          const p = data.providers[id];
+          const box = document.createElement("div");
+          box.className = "ai-evidence-box";
+          const title = p.name || id;
+          const conf = Math.round(p.confidenceScore);
+          const evidenceText = (p.evidence || []).map(item => {
             const claim = item && typeof item.claim === "string" ? item.claim : "Claim not specified";
             const status = item && typeof item.status === "string" ? item.status : "unverified";
-            const explanation = item && typeof item.explanation === "string" ? item.explanation : "No explanation provided.";
-            return `Claim: ${claim}\nStatus: ${status}\nExplanation: ${explanation}`;
-          }).join("\n\n");
-          document.getElementById(`${name}Evidence`).textContent = evidenceText || "No evidence details returned.";
-        }
-        let successMsg = "Fact-check complete. View the Trust Score and Evidence pages.";
+            const explanation = item && typeof item.explanation === "string" ? item.explanation : "No explanation.";
+            return "Claim: " + claim + "\nStatus: " + status + "\nExplanation: " + explanation;
+          }).join("\n\n") || "No evidence details returned.";
+
+          box.innerHTML =
+            "<h3>" + title + " Evidence</h3>" +
+            '<div class="confidence-label">Confidence Score</div>' +
+            '<div class="confidence-score">' + conf + "</div>" +
+            '<div class="evidence-label">Evidence</div>' +
+            '<div class="evidence-content"></div>';
+          box.querySelector(".evidence-content").textContent = evidenceText;
+          evidenceContainer.appendChild(box);
+        });
+
+        let successMsg = "Fact-check complete. View Trust Score and Evidence.";
         if (data.billing && typeof data.billing.cost_usd === "number") {
           successMsg += " Charged " + formatCost(data.billing.cost_usd) + ".";
           if (typeof data.billing.balance_usd === "number") {
@@ -300,21 +484,25 @@
         }
         formMessage.textContent = successMsg;
       } catch (error) {
-        const msg = error instanceof Error ? error.message : "Could not complete the evaluation.";
-        if (msg.toLowerCase().includes("sign in") || msg.toLowerCase().includes("session")) {
+        const msg = error instanceof Error ? error.message : "Could not complete evaluation.";
+        if (/sign in|session/i.test(msg)) {
           formMessage.textContent = "Please sign in to use Trust AI.";
-          window.setTimeout(() => { window.location.href = "login.html?mode=login"; }, 1200);
-        } else if (msg.toLowerCase().includes("insufficient") || msg.toLowerCase().includes("balance") || msg.toLowerCase().includes("funds") || msg.toLowerCase().includes("add funds")) {
-          formMessage.textContent = "Please add funds. " + msg + " Open your account page and use Add Funds.";
+          setTimeout(() => { window.location.href = "login.html?mode=login"; }, 1200);
+        } else if (/insufficient|balance|funds|add funds/i.test(msg)) {
+          formMessage.textContent = "Please add funds. " + msg;
         } else {
           formMessage.textContent = msg;
         }
       } finally {
-        checkButton.disabled = !areWeightsValid(getWeights());
+        checkButton.disabled = !weightsValid();
       }
     });
 
-    updateWeightStatus();
+    // Init
+    equalizeWeights();
+    renderModelList("");
+    updateWeightUI();
+    updateCostPreview();
     requireLogin().catch(() => { window.location.href = "login.html?mode=login"; });
   </script>
 </body>
