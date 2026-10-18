@@ -119,6 +119,7 @@
     <button type="button" class="active" data-page="reviewPage" aria-selected="true">Fact-check</button>
     <button type="button" data-page="trustPage" aria-selected="false">Trust Score</button>
     <button type="button" data-page="evidencePage" aria-selected="false">Evidence</button>
+    <button type="button" id="trustyButton">Trusty</button>
   </nav>
 
   <main>
@@ -224,6 +225,11 @@
       }
       return session;
     }
+
+    // Trusty opens the multi-model chat page.
+    document.getElementById("trustyButton").addEventListener("click", () => {
+      window.location.href = "trusty.html";
+    });
 
     // Navigation
     document.querySelectorAll("nav button").forEach(button => {
