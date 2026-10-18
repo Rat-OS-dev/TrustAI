@@ -58,12 +58,18 @@ test('fails closed if a model has no configured billing rates', () => {
   );
 });
 
-test('applies one 10% markup to API cost', () => {
-  assert.equal(calculateCustomerPrice(1), 1.1);
+test('applies one 20% markup when raw API cost is under $1', () => {
+  assert.equal(calculateCustomerPrice(0.5), 0.6);
+  assert.equal(calculateCustomerPrice(0.99), 1.188);
 });
 
-test('preflight estimate includes one 10% markup', () => {
+test('applies one 10% markup when raw API cost is $1 or more', () => {
+  assert.equal(calculateCustomerPrice(1), 1.1);
+  assert.equal(calculateCustomerPrice(2), 2.2);
+});
+
+test('preflight estimate applies the correct single tiered markup', () => {
   const estimate = estimateRequestCost(500, ['gpt-5']);
   assert.ok(estimate > 0);
-  assert.ok(estimate / 1.1 > 0);
+  assert.ok(estimate / 1.2 > 0);
 });

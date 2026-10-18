@@ -37,9 +37,15 @@ function roundUsd(value) {
   return Math.round((value + Number.EPSILON) * 1e8) / 1e8;
 }
 
-// Apply one 10% markup to provider API cost for both estimates and final charges.
+// Apply one tiered markup to provider API cost for estimates and final charges:
+// 20% when the raw total API cost is under $1.00; otherwise 10%.
+export function getMarkupPercent(apiCost) {
+  return Math.max(0, Number(apiCost) || 0) < 1 ? 20 : 10;
+}
+
 export function calculateCustomerPrice(apiCost) {
-  return roundUsd(Math.max(0, Number(apiCost) || 0) * 1.10);
+  const rawCost = Math.max(0, Number(apiCost) || 0);
+  return roundUsd(rawCost * (1 + getMarkupPercent(rawCost) / 100));
 }
 
 /**
