@@ -98,7 +98,7 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
-      ...(Number.isInteger(maxOutputTokens) ? { max_tokens: maxOutputTokens } : {})
+      ...(Number.isInteger(maxOutputTokens) ? { max_completion_tokens: maxOutputTokens } : {})
     })
   });
 
