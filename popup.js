@@ -78,3 +78,47 @@ $("addFunds").addEventListener("click",()=>chrome.tabs.create({url:SITE_URL+"fun
 $("checkAnswer").addEventListener("click",async()=>{const answer=$("answerText").value.trim(),ids=[...selected];if(!answer){setMessage("checkMessage","Paste or load an answer first.",true);return;}if(answer.length>12000){setMessage("checkMessage","Text must be 12,000 characters or fewer.",true);return;}if(!validWeights()){setMessage("checkMessage","Choose 2–10 models and make weights total exactly 100%. Open Models to adjust.",true);return;}let s;try{s=await getSession();}catch(e){setMessage("checkMessage","Could not refresh your login. Please log in again.",true);showView("accountView");return;}if(!s?.access_token){setMessage("checkMessage","Log in to run a check. Open Account to sign in.",true);showView("accountView");return;}const b=$("checkAnswer");b.disabled=true;b.textContent="Checking with "+ids.length+" models…";setMessage("checkMessage","Evaluating answer. Please keep this popup open.");$("resultArea").classList.add("hidden");try{const weightsPayload={};ids.forEach(id=>weightsPayload[id]=Number(weights[id]));const r=await fetch(BACKEND_URL+"/api/evaluate",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+s.access_token},body:JSON.stringify({answer,models:ids,weights:weightsPayload})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||data.message||"Evaluation failed ("+r.status+").");if(typeof data.trustScore!=="number"||!data.providers)throw new Error("The server returned an invalid evaluation result.");lastResult={...data,answer,models:ids,weights:weightsPayload,checkedAt:new Date().toISOString()};await chrome.storage.local.set({trustAILastResult:lastResult});await loadAccount().catch(()=>{});$("trustScore").textContent=String(Math.round(data.trustScore));$("scoreSummary").textContent="Combined score from "+ids.length+" selected models and your weights";$("actualCost").textContent=typeof data.billing?.cost_usd==="number"?formatMoney(data.billing.cost_usd):"Not returned";$("usedModels").textContent=Object.keys(data.providers).length+" evaluators";$("remainingBalance").textContent=account&&Number.isFinite(Number(account.balance_usd))?Number(account.balance_usd).toLocaleString("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:8}):"Unavailable";$("resultArea").classList.remove("hidden");setMessage("checkMessage","Check complete. Your combined Trust Score is ready.");}catch(e){setMessage("checkMessage",e.message||"Could not complete evaluation.",true);if(/insufficient|balance|funds|add funds/i.test(e.message||""))setMessage("checkMessage",e.message+" Open Account to view balance or add funds.",true);if(/401|unauthorized|token|session|sign in/i.test(e.message||""))showView("accountView");}finally{b.disabled=!validWeights();b.textContent="Run Trust Check";}});
 $("viewEvidence").addEventListener("click",async()=>{if(!lastResult){setMessage("checkMessage","Run a check first.",true);return;}const s=await getSession();if(!s?.access_token){setMessage("checkMessage","Please log in again before opening evidence.",true);return;}chrome.runtime.sendMessage({type:"OPEN_TRUSTAI_EVIDENCE",result:lastResult,session:s},response=>{if(chrome.runtime.lastError||!response?.ok)setMessage("checkMessage","Could not open the evidence page. Try again.",true);else setMessage("checkMessage","Opening the full evidence page…");});});
 renderModels();renderWeights();updateCost();getSession().then(s=>{if(s?.access_token){$("statusBadge").textContent="SIGNED IN";loadAccount().catch(()=>{});}}).catch(()=>{});
+
+
+const trustyHistory = [];
+let trustyBusy = false;
+function appendTrustyMessage(role, content, meta) {
+ const box=$("trustyMessages");
+ if(!trustyHistory.length && box.querySelector(".muted")) box.innerHTML="";
+ const item=document.createElement("div");
+ item.style.padding="8px 0";
+ item.style.borderBottom="1px solid var(--border)";
+ const title=document.createElement("strong");
+ title.textContent=role==="user"?"You":"Trusty";
+ const body=document.createElement("div");
+ body.style.whiteSpace="pre-wrap";
+ body.style.overflowWrap="anywhere";
+ body.style.marginTop="4px";
+ body.textContent=content;
+ item.append(title,body);
+ if(meta){const info=document.createElement("div");info.className="tiny";info.style.marginTop="6px";const bits=[];if(meta.synthesizer?.name)bits.push("Synthesized by "+meta.synthesizer.name);if(typeof meta.cost_usd==="number")bits.push("API cost "+formatMoney(meta.cost_usd));info.textContent=bits.join(" · ");item.append(info);}
+ box.append(item);box.scrollTop=box.scrollHeight;
+}
+async function sendTrustyMessage(){
+ const prompt=$("trustyPrompt"),text=prompt.value.trim();
+ if(!text||trustyBusy)return;
+ let s;
+ try{s=await getSession();}catch(e){setMessage("trustyMessage","Could not refresh login. Open Account and sign in again.",true);return;}
+ if(!s?.access_token){setMessage("trustyMessage","Please sign in using Account before chatting with Trusty.",true);showView("accountView");return;}
+ trustyBusy=true;$("trustySend").disabled=true;$("trustySend").textContent="Working…";prompt.disabled=true;
+ appendTrustyMessage("user",text);trustyHistory.push({role:"user",content:text});prompt.value="";
+ setMessage("trustyMessage","Six models are drafting, voting, and synthesizing…");
+ try{
+  const r=await fetch(BACKEND_URL+"/api/trusty/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+s.access_token},body:JSON.stringify({messages:trustyHistory})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error||"Trusty could not answer this message ("+r.status+").");
+  if(typeof data.answer!=="string"||!data.answer.trim())throw new Error("Trusty returned an empty response.");
+  appendTrustyMessage("assistant",data.answer,data);trustyHistory.push({role:"assistant",content:data.answer});
+  setMessage("trustyMessage","Trusty replied.");
+  if(typeof data.balance_usd==="number"){$("balanceValue").textContent=formatMoney(data.balance_usd);}
+ }catch(e){trustyHistory.pop();setMessage("trustyMessage",e.message||"Trusty could not complete this message.",true);}
+ finally{trustyBusy=false;$("trustySend").disabled=false;$("trustySend").textContent="Send to Trusty";prompt.disabled=false;prompt.focus();}
+}
+$("trustySend").addEventListener("click",sendTrustyMessage);
+$("trustyPrompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendTrustyMessage();}});
+$("openTrustyWebsite").addEventListener("click",()=>chrome.tabs.create({url:SITE_URL+"trusty.html"}));
