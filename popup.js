@@ -14,8 +14,7 @@ const CATALOG = [
  {id:"gpt-5-mini",name:"GPT-5 mini",family:"OpenAI",description:"Faster, cheaper GPT-5",tier:"average",input:.25,output:2},
  {id:"gpt-5-nano",name:"GPT-5 nano",family:"OpenAI",description:"Smallest GPT-5 tier",tier:"cheap",input:.05,output:.4},
  {id:"gpt-4.1",name:"GPT-4.1",family:"OpenAI",description:"Strong GPT-4.1 model",tier:"average",input:2,output:8},
- {id:"gpt-4o-mini",name:"GPT-4o mini",family:"OpenAI",description:"Fast, affordable GPT-4o",tier:"cheap",input:.15,output:.6}
-
+ {id:"gpt-4o-mini",name:"GPT-4o mini",family:"OpenAI",description:"Fast, affordable GPT-4o",tier:"cheap",input:.15,output:.6},
  {id:"claude-opus-5-5",name:"Claude Opus 5.5",family:"Anthropic",description:"Flagship Claude model",tier:"average",input:4,output:20},
  {id:"claude-opus-5",name:"Claude Opus 5",family:"Anthropic",description:"Advanced reasoning model",tier:"average",input:5,output:25},
  {id:"claude-sonnet-5-5",name:"Claude Sonnet 5.5",family:"Anthropic",description:"Balanced high-performance model",tier:"average",input:2,output:10},
