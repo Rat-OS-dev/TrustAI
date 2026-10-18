@@ -144,21 +144,28 @@ router.post('/chat', async (req, res) => {
       return { ...model, response: result };
     }));
 
-    // Stage 2: every model votes for one other model to synthesize the final answer.
-    const draftBlock = drafts.map((d) => `MODEL ID: ${d.id}\nMODEL: ${d.name}\nDRAFT:\n${d.response}`).join('\n\n---\n\n');
+    // Stage 2: only after all six drafts finish, expose the complete set to every voter.
+    // Every voter receives every model's ID, name, and full response so the vote is based
+    // on the actual answer quality rather than a guess or model reputation.
+    const draftBlock = drafts.map((d) =>
+      `MODEL ID: ${d.id}\nMODEL NAME: ${d.name}\nFULL DRAFT RESPONSE:\n${d.response}`
+    ).join('\n\n================ MODEL RESPONSE ================\n\n');
     const votes = {};
     await Promise.all(MODEL_SET.map(async (voter) => {
+      const eligibleModels = MODEL_SET.filter((m) => m.id !== voter.id);
       const voteText = await queries[voter.id](
-        'You are voting for which OTHER model should synthesize one final answer from six drafts. Evaluate clarity, correctness, completeness, and ability to reconcile disagreement. You MUST NOT vote for yourself. Your own model ID is ' + voter.id + '. Choose exactly one ID from the eligible list and return only JSON: {"vote":"model-id"}.\nEligible model IDs: ' +
-        MODEL_SET.filter((m) => m.id !== voter.id).map((m) => m.id).join(', ') +
-        '\n\nUser question: ' + latestQuestion + '\n\nDrafts:\n' + draftBlock,
+        'VOTE AFTER READING THE RESPONSES BELOW. You can see all six full drafts, including the draft written by your own model. Read and compare the actual content of every draft before voting. Evaluate correctness, relevance to the user question, completeness, clear reasoning, appropriate uncertainty, and whether the answer handles disagreements responsibly. Do not choose based on brand reputation or model name alone.\n\n' +
+        'Your voter model ID is: ' + voter.id + '. You are forbidden from voting for your own model. You must select exactly one DIFFERENT model from this eligible list: ' +
+        eligibleModels.map((m) => m.id + ' (' + m.name + ')').join(', ') +
+        '.\n\nReturn ONLY valid JSON with the exact schema {"vote":"eligible-model-id"}. The vote must exactly match one ID in the eligible list.\n\nUSER QUESTION:\n' +
+        latestQuestion + '\n\nALL SIX FULL MODEL RESPONSES (read each before choosing):\n\n' + draftBlock,
         {
-          systemPrompt: 'You are an impartial model-selection judge. Follow the voting rules exactly and return the required JSON.',
-          maxOutputTokens: 100
+          systemPrompt: 'You are an impartial evaluator selecting the best answer synthesizer. Read the complete candidate responses provided by the user message. Compare their substance, then cast one valid vote for a model other than yourself. Return only the requested JSON.',
+          maxOutputTokens: 120
         }
       );
       const vote = parseVote(voteText, voter.id);
-      if (!vote) throw new Error(`The vote from ${voter.name} was not valid.`);
+      if (!vote) throw new Error(`The vote from ${voter.name} was invalid or attempted a forbidden self-vote.`);
       votes[voter.id] = vote;
     }));
 
