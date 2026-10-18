@@ -13,21 +13,26 @@
       padding: 0;
       overflow: hidden;
       background: #0b1020;
+      color: #f3f6ff;
+      font: 13px/1.4 Arial, sans-serif;
     }
     iframe {
       display: block;
       width: 100%;
-      height: 100%;
+      height: 564px;
       border: 0;
       background: #0b1020;
     }
-    .fallback {
-      display: none;
-      padding: 20px;
-      color: #f3f6ff;
-      font: 14px/1.5 Arial, sans-serif;
+    .toolbar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid #2c3954;
+      background: #10182b;
     }
-    .fallback a { color: #7c9cff; }
+    .toolbar a { color: #9bb2ff; text-decoration: none; }
+    .toolbar a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -37,10 +42,10 @@
     allow="clipboard-read; clipboard-write"
     referrerpolicy="strict-origin-when-cross-origin">
   </iframe>
-  <div class="fallback" id="fallback">
-    <strong>Trust AI could not load.</strong>
-    <p>Make sure the Trust AI website is published on GitHub Pages and try again.</p>
-    <p><a href="https://rat-os-dev.github.io/TrustAI/" target="_blank" rel="noopener noreferrer">Open Trust AI in a new tab</a></p>
+  <div class="toolbar">
+    <a href="https://rat-os-dev.github.io/TrustAI/" target="_blank" rel="noopener noreferrer">
+      If the popup does not load, open Trust AI in a tab
+    </a>
   </div>
 </body>
 </html>
