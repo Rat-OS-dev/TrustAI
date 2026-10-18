@@ -114,7 +114,7 @@
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. Pricing is $0.005 per model per 100 characters (minimum $0.01 total).</p>
+        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is a rough estimate. Final charges use each provider's reported token usage and the selected models' API rates.</p>
 
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
@@ -229,7 +229,7 @@
       return Math.round(perModel * n * 10000) / 10000;
     }
     function formatCost(cost) {
-      return "$" + cost.toFixed(4).replace(/0+$/, "").replace(/\.$/, ".00");
+      return "$" + Number(cost || 0).toFixed(6).replace(/0+$/, "").replace(/\.$/, ".00");
     }
 
     const answerInput = document.getElementById("answerInput");
@@ -477,7 +477,16 @@
 
         let successMsg = "Fact-check complete. View Trust Score and Evidence.";
         if (data.billing && typeof data.billing.cost_usd === "number") {
-          successMsg += " Charged " + formatCost(data.billing.cost_usd) + ".";
+          successMsg += " Usage-based charge: " + formatCost(data.billing.cost_usd) + ".";
+          if (data.billing.model_costs_usd && typeof data.billing.model_costs_usd === "object") {
+            const breakdown = Object.entries(data.billing.model_costs_usd)
+              .map(([id, cost]) => {
+                const meta = MODEL_CATALOG.find(model => model.id === id);
+                return (meta ? meta.name : id) + " " + formatCost(cost);
+              })
+              .join(", ");
+            if (breakdown) successMsg += " By model: " + breakdown + ".";
+          }
           if (typeof data.billing.balance_usd === "number") {
             successMsg += " New balance: " + formatCost(data.billing.balance_usd) + ".";
           }
