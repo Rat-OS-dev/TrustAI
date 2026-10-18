@@ -1,6 +1,4 @@
 
-const PROVIDERS = ['grok', 'openai'];
-
 function isScore(value) {
   return (
     typeof value === 'number' &&
@@ -19,8 +17,16 @@ export function buildEvaluationResponse({ trustScore, providers }) {
     throw new Error('Provider results are required.');
   }
 
-  for (const provider of PROVIDERS) {
-    const result = providers[provider];
+  const keys = Object.keys(providers);
+
+  if (keys.length === 0) {
+    throw new Error('At least one provider result is required.');
+  }
+
+  const normalized = {};
+
+  for (const key of keys) {
+    const result = providers[key];
 
     if (
       !result ||
@@ -28,23 +34,21 @@ export function buildEvaluationResponse({ trustScore, providers }) {
       !isScore(result.evidenceScore) ||
       !Array.isArray(result.evidence)
     ) {
-      throw new Error(`Invalid results for ${provider}.`);
+      throw new Error(`Invalid results for ${key}.`);
     }
+
+    normalized[key] = {
+      modelId: result.modelId || key,
+      name: result.name || key,
+      family: result.family || '',
+      confidenceScore: result.confidenceScore,
+      evidenceScore: result.evidenceScore,
+      evidence: result.evidence
+    };
   }
 
   return {
     trustScore,
-    providers: {
-      grok: {
-        confidenceScore: providers.grok.confidenceScore,
-        evidenceScore: providers.grok.evidenceScore,
-        evidence: providers.grok.evidence
-      },
-      openai: {
-        confidenceScore: providers.openai.confidenceScore,
-        evidenceScore: providers.openai.evidenceScore,
-        evidence: providers.openai.evidence
-      }
-    }
+    providers: normalized
   };
 }

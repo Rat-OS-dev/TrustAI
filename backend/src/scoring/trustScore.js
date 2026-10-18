@@ -1,6 +1,4 @@
 
-const PROVIDERS = ['grok', 'openai'];
-
 function validScore(value) {
   return (
     typeof value === 'number' &&
@@ -10,35 +8,33 @@ function validScore(value) {
   );
 }
 
-function validateWeights(weights) {
+function validateWeights(weights, scoreKeys) {
   if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
     throw new Error('Model weights are required.');
   }
 
-  for (const provider of PROVIDERS) {
+  if (!Array.isArray(scoreKeys) || scoreKeys.length === 0) {
+    throw new Error('At least one model score is required.');
+  }
+
+  for (const key of scoreKeys) {
     if (
-      !validScore(weights[provider]) ||
-      weights[provider] < 5
+      typeof weights[key] !== 'number' ||
+      !Number.isFinite(weights[key]) ||
+      weights[key] < 0
     ) {
-      throw new Error(
-        `Invalid weight for ${provider}. Each weight must be 5–100%.`
-      );
+      throw new Error(`Invalid weight for ${key}.`);
     }
   }
 
-  const total = PROVIDERS.reduce(
-    (sum, provider) => sum + weights[provider],
-    0
-  );
+  const total = scoreKeys.reduce((sum, key) => sum + weights[key], 0);
 
   if (Math.abs(total - 100) > 0.000001) {
-    throw new Error('Grok and OpenAI weights must total 100%.');
+    throw new Error('Model weights must total 100%.');
   }
 }
 
 export function calculateTrustScore(weights, evidenceScores) {
-  validateWeights(weights);
-
   if (
     !evidenceScores ||
     typeof evidenceScores !== 'object' ||
@@ -47,17 +43,18 @@ export function calculateTrustScore(weights, evidenceScores) {
     throw new Error('Evidence scores are required.');
   }
 
-  for (const provider of PROVIDERS) {
-    if (!validScore(evidenceScores[provider])) {
-      throw new Error(
-        `A valid evidence score for ${provider} is required.`
-      );
+  const scoreKeys = Object.keys(evidenceScores);
+
+  validateWeights(weights, scoreKeys);
+
+  for (const key of scoreKeys) {
+    if (!validScore(evidenceScores[key])) {
+      throw new Error(`A valid evidence score for ${key} is required.`);
     }
   }
 
-  const weightedTotal = PROVIDERS.reduce(
-    (sum, provider) =>
-      sum + weights[provider] * evidenceScores[provider],
+  const weightedTotal = scoreKeys.reduce(
+    (sum, key) => sum + weights[key] * evidenceScores[key],
     0
   );
 
