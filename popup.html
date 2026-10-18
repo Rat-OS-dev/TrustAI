@@ -9,7 +9,7 @@
 *{box-sizing:border-box}body{width:380px;height:580px;margin:0;padding:14px;background:var(--bg);color:var(--text);font:13px/1.45 Arial,Helvetica,sans-serif}
 button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
 .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}.logo{width:40px;height:40px;display:grid;place-items:center;border:1px solid #286657;border-radius:12px;background:var(--mintDark);color:var(--mint)}h1{font-size:19px;margin:0}.subtitle{font-size:11px;color:var(--muted)}.status{margin-left:auto;font-size:10px;color:var(--mint);border:1px solid #28684f;background:#10251e;border-radius:99px;padding:4px 7px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}.tab{padding:8px 5px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--muted);font-weight:700}.tab.active{background:#21352f;border-color:#367a66;color:var(--mint)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}.tab{padding:8px 5px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--muted);font-weight:700}.tab.active{background:#21352f;border-color:#367a66;color:var(--mint)}
 .view{display:none;height:465px;overflow:auto;padding:1px 2px 8px}.view.active{display:block}h2{font-size:15px;margin:2px 0 5px}.muted{color:var(--muted)}.desc{font-size:11px;color:var(--muted);margin:0 0 11px}
 label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-bottom:10px}input[type=email],input[type=password],input[type=text],input[type=date],textarea{width:100%;border:1px solid var(--border);border-radius:9px;background:#0b1222;color:var(--text);padding:10px;outline:none}textarea{height:120px;resize:vertical;line-height:1.5}input:focus,textarea:focus{border-color:var(--mint)}.panel{border:1px solid var(--border);background:var(--panel);border-radius:11px;padding:11px;margin-bottom:10px}
 .btn{width:100%;border:1px solid var(--border);border-radius:9px;background:#182538;color:#dbe5f2;padding:10px;font-weight:700}.btn.primary{background:var(--mint);color:#092019;border-color:var(--mint)}.btn.primary:hover{background:#83edca}.btn.secondary{margin-top:7px}.inline{display:flex;gap:7px}.inline>*{flex:1}.message{min-height:18px;margin:8px 1px;color:var(--mint);font-size:11px;overflow-wrap:anywhere}.message.error{color:var(--red)}.score-card{text-align:center;padding:13px 10px;background:linear-gradient(135deg,#12251f,#151f30);border:1px solid #28684f;border-radius:12px;margin:9px 0}.score-label{color:var(--muted);font-size:11px}.score{font-size:44px;line-height:1.2;font-weight:800;color:var(--mint);margin:4px 0}.score small{font-size:15px;color:var(--muted)}.result-meta{font-size:11px;color:var(--muted)}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 7px}.section-heading h3{font-size:12px;margin:0}.pill{font-size:10px;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--muted)}
@@ -18,9 +18,18 @@ label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-
 </head>
 <body>
 <header class="brand"><div class="logo" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></div><div><h1>Trust AI</h1><div class="subtitle">AI Answer Checker</div></div><span class="status" id="statusBadge">READY</span></header>
-<nav class="tabs" aria-label="Trust AI sections"><button class="tab active" data-view="checkView">Check</button><button class="tab" data-view="modelsView">Models</button><button class="tab" data-view="accountView">Account</button></nav>
+<nav class="tabs" aria-label="Trust AI sections"><button class="tab active" data-view="trustyView">Trusty</button><button class="tab" data-view="checkView">Trust AI</button><button class="tab" data-view="modelsView">Models</button><button class="tab" data-view="accountView">Account</button></nav>
 
-<section class="view active" id="checkView">
+<section class="view active" id="trustyView">
+  <h2>Trusty</h2><p class="desc">Your main AI chat. Six models draft answers, vote, and one synthesizes the response.</p>
+  <div id="trustyMessages" class="panel" style="height:245px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere"><span class="muted">Welcome to Trusty. Ask a question to get started.</span></div>
+  <div class="field"><label for="trustyPrompt">MESSAGE TRUSTY</label><textarea id="trustyPrompt" maxlength="8000" style="height:74px" placeholder="Ask Trusty anything…"></textarea></div>
+  <button class="btn primary" id="trustySend">Send to Trusty</button>
+  <p class="message" id="trustyMessage" role="status" aria-live="polite"></p>
+  <button class="btn" id="openTrustyWebsite">Open full Trusty chat</button>
+</section>
+
+<section class="view" id="checkView">
   <h2>Check an AI answer</h2><p class="desc">Highlight an answer on the page, or paste it below. Review it before checking.</p>
   <div class="field"><label for="answerText">ANSWER TEXT</label><textarea id="answerText" maxlength="12000" placeholder="Paste the AI answer here…"></textarea></div>
   <div class="inline"><button class="btn" id="loadSelection">Load highlighted text</button><button class="btn" id="clearAnswer">Clear</button></div>
