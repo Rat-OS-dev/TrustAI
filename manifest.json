@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Trust AI",
+  "version": "1.0.0",
+  "description": "Open the Trust AI fact-checking website in a compact Chrome popup.",
+  "action": {
+    "default_title": "Trust AI",
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://rat-os-dev.github.io;"
+  }
+}
