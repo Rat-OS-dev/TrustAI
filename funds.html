@@ -282,29 +282,44 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw new Error(
-            result.error ||
-            'The code could not be redeemed. Please try again.'
-          );
+          // Backend rejected the code
+          const backendError = result.error || '';
+
+          if (
+            backendError.toLowerCase().includes('invalid') ||
+            backendError.toLowerCase().includes('inactive') ||
+            backendError.toLowerCase().includes('already redeemed') ||
+            backendError.toLowerCase().includes('maximum')
+          ) {
+            showMessage('Promo code failed. ' + backendError, 'error');
+          } else {
+            showMessage(
+              backendError || 'Promo code failed.',
+              'error'
+            );
+          }
+          return;
         }
 
+        // Backend confirmed success
         input.value = '';
 
         if (typeof result.balance_usd === 'number') {
           showMessage(
-            `Success! Promotional credit was added. Your wallet balance is $${result.balance_usd.toFixed(2)}.`,
+            'Promo code worked. Money added to account. Your new balance is $' +
+              result.balance_usd.toFixed(2) + '.',
             'success'
           );
         } else {
           showMessage(
-            'Success! Your promotional code was redeemed.',
+            'Promo code worked. Money added to account.',
             'success'
           );
         }
 
       } catch (error) {
         showMessage(
-          error.message || 'Something went wrong. Please try again.',
+          'Promo code failed. ' + (error.message || 'Please try again.'),
           'error'
         );
       } finally {
