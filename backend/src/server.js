@@ -11,7 +11,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 // Keep the Supabase secret exclusively on the backend.
-// If it is missing, the existing fact-checker can still start.
 const supabaseAdmin =
   SUPABASE_URL && SUPABASE_SECRET_KEY
     ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
@@ -33,7 +32,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Verify a real Supabase access token for account endpoints.
+// Verify a real Supabase access token for protected endpoints.
 async function requireAuthenticatedUser(req, res, next) {
   if (!supabaseAdmin) {
     return res.status(503).json({
@@ -74,7 +73,6 @@ async function requireAuthenticatedUser(req, res, next) {
 }
 
 // Get the signed-in user's profile and wallet balance.
-// The user ID always comes from the verified access token.
 app.get('/api/account', requireAuthenticatedUser, async (req, res) => {
   try {
     const userId = req.authUser.id;
@@ -130,7 +128,6 @@ app.get('/api/account', requireAuthenticatedUser, async (req, res) => {
 });
 
 // Update profile details for the signed-in user only.
-// This endpoint cannot change wallet balances.
 app.patch(
   '/api/account/profile',
   requireAuthenticatedUser,
@@ -230,13 +227,6 @@ app.patch(
 
 /**
  * Redeem a promotional code.
- *
- * Rules:
- * - Codes live in the promo_codes table.
- * - max_per_user = null  → unlimited redemptions for that user
- * - max_per_user = 1     → only once per user
- * - Amount is taken from the database (never from the client)
- * - Client cannot choose how much money to add
  */
 app.post(
   '/api/wallet/redeem-promo',
@@ -260,7 +250,6 @@ app.post(
         });
       }
 
-      // 1. Look up the code
       const { data: promo, error: promoError } = await supabaseAdmin
         .from('promo_codes')
         .select('code, amount_usd, max_per_user, is_active')
@@ -289,7 +278,6 @@ app.post(
         });
       }
 
-      // 2. Check how many times this user has already redeemed this code
       const { count: previousCount, error: countError } = await supabaseAdmin
         .from('promo_redemptions')
         .select('*', { count: 'exact', head: true })
@@ -305,7 +293,6 @@ app.post(
 
       const alreadyRedeemed = previousCount || 0;
 
-      // max_per_user = null means unlimited
       if (
         promo.max_per_user !== null &&
         promo.max_per_user !== undefined &&
@@ -316,7 +303,6 @@ app.post(
         });
       }
 
-      // 3. Credit the wallet
       const { data: wallet, error: walletError } = await supabaseAdmin
         .from('wallets')
         .select('balance_usd')
@@ -345,7 +331,6 @@ app.post(
         });
       }
 
-      // 4. Record the redemption (audit log)
       const { error: logError } = await supabaseAdmin
         .from('promo_redemptions')
         .insert({
@@ -355,8 +340,6 @@ app.post(
         });
 
       if (logError) {
-        // Balance was already updated. Log the problem but still return success
-        // so the user is not left thinking the credit failed.
         console.error(
           'Failed to log promo redemption (balance was still credited):',
           logError.message
@@ -382,8 +365,8 @@ app.post(
   }
 );
 
-// Existing fact-checking endpoint remains connected.
-app.use('/api/evaluate', evaluateRouter);
+// Fact-checking endpoint — now requires a logged-in user.
+app.use('/api/evaluate', requireAuthenticatedUser, evaluateRouter);
 
 app.listen(PORT, () => {
   console.log(`Trust AI backend running on port ${PORT}`);
