@@ -380,8 +380,12 @@ router.post('/', async (req, res) => {
     const usageByModel = Object.fromEntries(
       models.map((id) => [id, providerResultsWithUsage[id].usage])
     );
-    const { cost_usd: actualCost, model_costs_usd: modelCosts } =
-      calculateUsageCost(usageByModel);
+    const {
+      api_cost_usd: actualApiCost,
+      cost_usd: customerCharge,
+      model_costs_usd: modelCosts,
+      api_model_costs_usd: apiModelCosts
+    } = calculateUsageCost(usageByModel);
 
     const providerResults = Object.fromEntries(
       models.map((id) => {
@@ -399,9 +403,14 @@ router.post('/', async (req, res) => {
     let billing;
     try {
       billing = {
-        ...(await chargeUserForCost(userId, actualCost)),
+        ...(await chargeUserForCost(userId, customerCharge)),
         model_count: modelCount,
         pricing_basis: 'provider_reported_tokens',
+        api_cost_usd: actualApiCost,
+        api_markup_percent: 10,
+        service_markup_percent: 10,
+        combined_markup_percent: 21,
+        api_model_costs_usd: apiModelCosts,
         model_costs_usd: modelCosts,
         usage_by_model: Object.fromEntries(
           models.map((id) => {
@@ -439,11 +448,16 @@ router.post('/', async (req, res) => {
 
     responseData.models = models;
     responseData.billing = {
+      api_cost_usd: billing.api_cost_usd,
       cost_usd: billing.cost_usd,
       balance_usd: billing.balance_usd,
       charged: billing.charged,
       model_count: modelCount,
       pricing_basis: billing.pricing_basis,
+      api_markup_percent: billing.api_markup_percent,
+      service_markup_percent: billing.service_markup_percent,
+      combined_markup_percent: billing.combined_markup_percent,
+      api_model_costs_usd: billing.api_model_costs_usd,
       model_costs_usd: billing.model_costs_usd,
       usage_by_model: billing.usage_by_model
     };

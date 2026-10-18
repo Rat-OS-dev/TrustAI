@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   calculateModelUsageCost,
   calculateUsageCost,
+  calculateCustomerPrice,
   estimateRequestCost
 } from './billing.js';
 
@@ -34,9 +35,11 @@ test('sums actual usage costs across selected models', () => {
     'gpt-5-mini': { input_tokens: 1000, cached_input_tokens: 0, output_tokens: 100 }
   });
 
-  assert.equal(result.model_costs_usd['gpt-5'], 0.00225);
-  assert.equal(result.model_costs_usd['gpt-5-mini'], 0.00045);
-  assert.equal(result.cost_usd, 0.0027);
+  assert.equal(result.api_model_costs_usd['gpt-5'], 0.00225);
+  assert.equal(result.api_model_costs_usd['gpt-5-mini'], 0.00045);
+  assert.equal(result.api_cost_usd, 0.0027);
+  assert.equal(result.cost_usd, calculateCustomerPrice(0.0027));
+  assert.ok(result.cost_usd > result.api_cost_usd);
 });
 
 test('preflight estimate is model-specific and positive', () => {
@@ -53,4 +56,14 @@ test('fails closed if a model has no configured billing rates', () => {
     () => calculateModelUsageCost('unknown-model', { input_tokens: 1, output_tokens: 1 }),
     /No API billing rates configured/
   );
+});
+
+test('adds 10% to API cost, then another 10% to the subtotal', () => {
+  assert.equal(calculateCustomerPrice(1), 1.21);
+});
+
+test('preflight estimate includes both 10% markups', () => {
+  const withMarkups = estimateRequestCost(500, ['gpt-5']);
+  assert.ok(withMarkups > 0);
+  assert.ok(withMarkups / 1.21 > 0);
 });
