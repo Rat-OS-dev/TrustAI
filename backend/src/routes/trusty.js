@@ -82,6 +82,23 @@ async function getWallet(userId) {
   return Number(data.balance_usd) || 0;
 }
 
+function estimateTrustyReservation(transcriptText, latestQuestion) {
+  // Conservative preflight bound so a low wallet balance is rejected before API usage.
+  const tokens = (chars) => Math.ceil(Math.max(0, chars) / 2) + 512;
+  const draftChars = ('Conversation: ' + transcriptText + ' Latest question: ' + latestQuestion).length;
+  const allDraftsChars = MODEL_SET.length * 1200 * 8 + 1000;
+  const voteChars = 1800 + latestQuestion.length + allDraftsChars;
+  const synthesisChars = 1800 + transcriptText.length + latestQuestion.length + allDraftsChars;
+  let total = 0;
+  let synthesisMax = 0;
+  for (const model of MODEL_SET) {
+    total += calculateModelUsageCost(model.id, { input_tokens: tokens(draftChars), output_tokens: 1200 });
+    total += calculateModelUsageCost(model.id, { input_tokens: tokens(voteChars), output_tokens: 1600 });
+    synthesisMax = Math.max(synthesisMax, calculateModelUsageCost(model.id, { input_tokens: tokens(synthesisChars), output_tokens: 2000 }));
+  }
+  return Math.round((Math.max(0.01, (total + synthesisMax) * 1.25) + Number.EPSILON) * 1e8) / 1e8;
+}
+
 async function chargeExactApiCost(userId, cost) {
   const roundedCost = Math.round((cost + Number.EPSILON) * 1e8) / 1e8;
   const { data: wallet, error: readError } = await supabaseAdmin
