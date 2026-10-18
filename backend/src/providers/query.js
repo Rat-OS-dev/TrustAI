@@ -87,64 +87,6 @@ async function callOpenAI(modelId, prompt) {
   return result;
 }
 
-async function callGemini(modelId, prompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured.');
-  }
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent`,
-    {
-      method: 'POST',
-      headers: {
-        'x-goog-api-key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: 0
-        }
-      })
-    }
-  );
-
-  const responseText = await response.text();
-  let data;
-
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const detail = data?.error?.message || 'No error details returned.';
-    console.error(`Gemini API error for ${modelId} (${response.status}): ${detail}`);
-    throw new Error(`Gemini API request failed for ${modelId} (${response.status}).`);
-  }
-
-  const result = (data?.candidates?.[0]?.content?.parts || [])
-    .map((part) => part?.text)
-    .filter((part) => typeof part === 'string')
-    .join('');
-
-  if (!result.trim()) {
-    throw new Error(`${modelId} returned an empty response.`);
-  }
-
-  return result;
-}
 
 /**
  * Query a model from the catalog by id.
@@ -162,9 +104,6 @@ export function makeQueryFunction(modelId) {
       return callOpenAI(model.id, prompt);
     }
 
-    if (model.provider === 'google') {
-      return callGemini(model.id, prompt);
-    }
 
     throw new Error(`Unsupported provider: ${model.provider}`);
   };
