@@ -78,8 +78,8 @@
         <p class="description">Type or paste anything you want fact-checked below. Trust AI uses Grok and OpenAI to assess factual claims and provide supporting evidence.</p>
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
-          <textarea id="answerInput" maxlength="1000" placeholder="Type or paste anything you want fact-checked here..." required></textarea>
-          <p class="weight-note">Maximum 1,000 characters.</p>
+          <textarea id="answerInput" maxlength="12000" placeholder="Type or paste anything you want fact-checked here..." required></textarea>
+          <p class="weight-note">Maximum 12,000 characters.</p>
           <p id="costPreview" class="weight-note" style="margin-top:8px;color:var(--accent);font-weight:bold;">Estimated cost: $0.01</p>
           <h3>Model Weights</h3>
           <p class="description">Set the importance of each AI manually. Each AI must receive at least 5%, and both percentages must add up to 100%.</p>
@@ -248,8 +248,8 @@
         answerInput.focus();
         return;
       }
-      if (answer.length > 1000) {
-        formMessage.textContent = "Text must be 1,000 characters or fewer.";
+      if (answer.length > 12000) {
+        formMessage.textContent = "Text must be 12,000 characters or fewer.";
         return;
       }
       const providerNames = ["grok", "openai"];
