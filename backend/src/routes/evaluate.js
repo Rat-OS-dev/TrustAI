@@ -10,7 +10,7 @@ import {
   calculateEvidenceScore
 } from '../scoring/trustScore.js';
 
-import { calculateInputCost, calculateUsageCost } from '../billing.js';
+import { estimateRequestCost, calculateUsageCost } from '../billing.js';
 import {
   MODEL_BY_ID,
   MIN_MODELS,
@@ -304,7 +304,7 @@ router.post('/', async (req, res) => {
 
   const inputLength = answer.trim().length;
   const modelCount = models.length;
-  const estimatedCost = calculateInputCost(inputLength, modelCount);
+  const estimatedCost = estimateRequestCost(inputLength, models);
 
   try {
     if (supabaseAdmin) {
