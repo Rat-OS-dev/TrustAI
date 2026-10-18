@@ -247,10 +247,6 @@ function validateRequest(answer, weights) {
   return null;
 }
 
-/**
- * Check balance and charge after a successful evaluation.
- * Returns { charged, cost, balance_usd } or throws / returns an error response shape.
- */
 async function chargeUserForInput(userId, characterCount) {
   if (!supabaseAdmin) {
     throw new Error('Billing is not configured on the server.');
@@ -272,7 +268,7 @@ async function chargeUserForInput(userId, characterCount) {
 
   if (currentBalance < cost) {
     const err = new Error(
-      `Insufficient balance. This fact-check costs $${cost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`
+      `Please add funds. This fact-check costs $${cost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`
     );
     err.statusCode = 402;
     err.cost = cost;
@@ -315,7 +311,6 @@ router.post('/', async (req, res) => {
     });
   }
 
-  // Pre-check balance before spending API credits (same formula, no deduction yet)
   const inputLength = answer.trim().length;
   const estimatedCost = calculateInputCost(inputLength);
 
@@ -337,7 +332,7 @@ router.post('/', async (req, res) => {
 
       if (currentBalance < estimatedCost) {
         return res.status(402).json({
-          error: `Insufficient balance. This fact-check costs $${estimatedCost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`,
+          error: `Please add funds. This fact-check costs $${estimatedCost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`,
           cost_usd: estimatedCost,
           balance_usd: currentBalance
         });
@@ -383,7 +378,6 @@ router.post('/', async (req, res) => {
       providerResults
     );
 
-    // Charge only after a successful evaluation
     let billing = {
       charged: false,
       cost_usd: estimatedCost,
@@ -393,8 +387,6 @@ router.post('/', async (req, res) => {
     try {
       billing = await chargeUserForInput(userId, inputLength);
     } catch (chargeError) {
-      // Evaluation succeeded but charge failed — still return results,
-      // but surface the billing problem.
       console.error(
         'Post-evaluation charge failed:',
         chargeError instanceof Error ? chargeError.message : chargeError
