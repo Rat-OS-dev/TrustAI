@@ -125,7 +125,7 @@
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is a rough estimate. Final charges use each provider's reported token usage and the selected models' API rates.</p>
+        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is an estimate. Final charges use reported API token usage, plus 10% above API cost and another 10% service markup on that subtotal.</p>
 
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
@@ -264,7 +264,9 @@
           1000000
         ) * safetyMultiplier;
       }, 0);
-      return Math.round(total * 100000000) / 100000000;
+      const apiCostWithFirstMarkup = total * 1.10;
+      const customerPrice = apiCostWithFirstMarkup * 1.10;
+      return Math.round(customerPrice * 100000000) / 100000000;
     }
     function formatCost(cost) {
       return "$" + Number(cost || 0).toFixed(8).replace(/0+$/, "").replace(/\.$/, ".00");
@@ -519,7 +521,10 @@
 
         let successMsg = "Fact-check complete. View Trust Score and Evidence.";
         if (data.billing && typeof data.billing.cost_usd === "number") {
-          successMsg += " Usage-based charge: " + formatCost(data.billing.cost_usd) + ".";
+          if (typeof data.billing.api_cost_usd === "number") {
+            successMsg += " Provider API cost: " + formatCost(data.billing.api_cost_usd) + ".";
+          }
+          successMsg += " Total charge (includes two 10% markups): " + formatCost(data.billing.cost_usd) + ".";
           if (data.billing.model_costs_usd && typeof data.billing.model_costs_usd === "object") {
             const breakdown = Object.entries(data.billing.model_costs_usd)
               .map(([id, cost]) => {
