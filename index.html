@@ -125,7 +125,7 @@
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is an estimate. Final charges use reported API token usage plus one 10% markup.</p>
+        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is an estimate. Final charge is determined afterward.</p>
 
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
@@ -264,7 +264,8 @@
           1000000
         ) * safetyMultiplier;
       }, 0);
-      const customerPrice = total * 1.10;
+      const markup = total < 1 ? 1.20 : 1.10;
+      const customerPrice = total * markup;
       return Math.round(customerPrice * 100000000) / 100000000;
     }
     function formatCost(cost) {
@@ -518,25 +519,10 @@
           evidenceContainer.appendChild(box);
         });
 
-        let successMsg = "Fact-check complete. View Trust Score and Evidence.";
-        if (data.billing && typeof data.billing.cost_usd === "number") {
-          if (typeof data.billing.api_cost_usd === "number") {
-            successMsg += " Provider API cost: " + formatCost(data.billing.api_cost_usd) + ".";
-          }
-          successMsg += " Total charge (includes one 10% markup): " + formatCost(data.billing.cost_usd) + ".";
-          if (data.billing.model_costs_usd && typeof data.billing.model_costs_usd === "object") {
-            const breakdown = Object.entries(data.billing.model_costs_usd)
-              .map(([id, cost]) => {
-                const meta = MODEL_CATALOG.find(model => model.id === id);
-                return (meta ? meta.name : id) + " " + formatCost(cost);
-              })
-              .join(", ");
-            if (breakdown) successMsg += " By model: " + breakdown + ".";
-          }
-          if (typeof data.billing.balance_usd === "number") {
-            successMsg += " New balance: " + formatCost(data.billing.balance_usd) + ".";
-          }
-        }
+        const successMsg =
+          data.billing && typeof data.billing.cost_usd === "number"
+            ? "Total price was " + formatCost(data.billing.cost_usd) + "."
+            : "Fact-check complete.";
         formMessage.textContent = successMsg;
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Could not complete evaluation.";
