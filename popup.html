@@ -1,127 +1,86 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Trust AI</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b1220;
-      --panel: #151f30;
-      --panel-soft: #101a2a;
-      --border: #2b394e;
-      --text: #f4f7fc;
-      --muted: #a8b6c9;
-      --mint: #66e0b7;
-      --mint-dark: #153b35;
-    }
-    * { box-sizing: border-box; }
-    body {
-      width: 360px;
-      min-height: 500px;
-      margin: 0;
-      padding: 18px;
-      background: var(--bg);
-      color: var(--text);
-      font: 13px/1.5 Arial, Helvetica, sans-serif;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-    .logo {
-      width: 46px; height: 46px; display: grid; place-items: center;
-      border: 1px solid #286657; border-radius: 14px; background: var(--mint-dark);
-      color: var(--mint); flex: 0 0 auto;
-    }
-    .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.4px; }
-    .subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; }
-    .status {
-      margin-left: auto; padding: 4px 8px; border: 1px solid #28684f;
-      border-radius: 999px; color: var(--mint); background: #10251e;
-      font-size: 10px; font-weight: 700; letter-spacing: .5px;
-    }
-    .rule { height: 1px; background: var(--border); margin: 0 0 18px; }
-    h2 { margin: 0 0 5px; font-size: 16px; }
-    .description { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
-    .text-label { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-weight: 700; }
-    .text-card {
-      padding: 11px; border: 1px solid var(--border); border-radius: 12px;
-      background: var(--panel); margin-bottom: 12px;
-    }
-    textarea {
-      display: block; width: 100%; min-height: 145px; resize: vertical;
-      padding: 0; border: 0; outline: 0; background: transparent;
-      color: var(--text); font: 12px/1.6 Arial, Helvetica, sans-serif;
-    }
-    textarea::placeholder { color: #8190a6; }
-    .small-action {
-      width: 100%; padding: 9px 10px; border: 1px solid var(--border);
-      border-radius: 9px; background: #182538; color: #dbe5f2;
-      font-weight: 700; cursor: pointer;
-    }
-    .small-action:hover { border-color: #56718e; background: #1c2b40; }
-    .primary {
-      display: flex; justify-content: center; align-items: center; gap: 9px;
-      width: 100%; margin-top: 12px; padding: 12px;
-      border: 0; border-radius: 10px; background: var(--mint);
-      color: #092019; font-weight: 800; font-size: 13px; cursor: pointer;
-    }
-    .primary:hover { background: #83edca; }
-    .primary:disabled { opacity: .45; cursor: not-allowed; }
-    .hint { margin: 10px 2px 0; color: var(--muted); font-size: 11px; text-align: center; }
-    .message { min-height: 18px; margin: 10px 2px 0; color: var(--mint); font-size: 11px; text-align: center; }
-    .footer { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); color: #8796ab; font-size: 11px; }
-    button:focus-visible, textarea:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trust AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#151f30;--panel2:#101a2a;--border:#2b394e;--text:#f4f7fc;--muted:#a8b6c9;--mint:#66e0b7;--mintDark:#153b35;--red:#ff8791;--blue:#8da8ff}
+*{box-sizing:border-box}body{width:380px;height:580px;margin:0;padding:14px;background:var(--bg);color:var(--text);font:13px/1.45 Arial,Helvetica,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}.logo{width:40px;height:40px;display:grid;place-items:center;border:1px solid #286657;border-radius:12px;background:var(--mintDark);color:var(--mint)}h1{font-size:19px;margin:0}.subtitle{font-size:11px;color:var(--muted)}.status{margin-left:auto;font-size:10px;color:var(--mint);border:1px solid #28684f;background:#10251e;border-radius:99px;padding:4px 7px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}.tab{padding:8px 5px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--muted);font-weight:700}.tab.active{background:#21352f;border-color:#367a66;color:var(--mint)}
+.view{display:none;height:465px;overflow:auto;padding:1px 2px 8px}.view.active{display:block}h2{font-size:15px;margin:2px 0 5px}.muted{color:var(--muted)}.desc{font-size:11px;color:var(--muted);margin:0 0 11px}
+label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-bottom:10px}input[type=email],input[type=password],input[type=text],input[type=date],textarea{width:100%;border:1px solid var(--border);border-radius:9px;background:#0b1222;color:var(--text);padding:10px;outline:none}textarea{height:120px;resize:vertical;line-height:1.5}input:focus,textarea:focus{border-color:var(--mint)}.panel{border:1px solid var(--border);background:var(--panel);border-radius:11px;padding:11px;margin-bottom:10px}
+.btn{width:100%;border:1px solid var(--border);border-radius:9px;background:#182538;color:#dbe5f2;padding:10px;font-weight:700}.btn.primary{background:var(--mint);color:#092019;border-color:var(--mint)}.btn.primary:hover{background:#83edca}.btn.secondary{margin-top:7px}.inline{display:flex;gap:7px}.inline>*{flex:1}.message{min-height:18px;margin:8px 1px;color:var(--mint);font-size:11px;overflow-wrap:anywhere}.message.error{color:var(--red)}.score-card{text-align:center;padding:13px 10px;background:linear-gradient(135deg,#12251f,#151f30);border:1px solid #28684f;border-radius:12px;margin:9px 0}.score-label{color:var(--muted);font-size:11px}.score{font-size:44px;line-height:1.2;font-weight:800;color:var(--mint);margin:4px 0}.score small{font-size:15px;color:var(--muted)}.result-meta{font-size:11px;color:var(--muted)}.section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 7px}.section-heading h3{font-size:12px;margin:0}.pill{font-size:10px;border:1px solid var(--border);border-radius:99px;padding:3px 7px;color:var(--muted)}
+.search{margin-bottom:8px}.models{display:flex;flex-direction:column;gap:6px}.model{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:9px;background:#0f1928}.model input{accent-color:var(--mint)}.model-main{flex:1;min-width:0}.model-name{font-size:11px;font-weight:700}.model-desc{font-size:10px;color:var(--muted)}.tier{font-size:9px;border-radius:99px;padding:3px 5px;border:1px solid var(--border);color:#ffd27a}.tier.cheap{color:var(--mint);border-color:#28684f}.weights{display:flex;flex-direction:column;gap:9px}.weight-row{border:1px solid var(--border);border-radius:9px;padding:8px;background:#0f1928}.weight-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}.weight-top strong{color:var(--mint)}input[type=range]{width:100%;accent-color:var(--mint)}.total{font-weight:700;text-align:center;padding:8px;border-radius:8px;background:#182538;margin:8px 0;font-size:11px}.total.valid{color:var(--mint)}.total.invalid{color:var(--red)}.balance{font-size:26px;font-weight:800;color:var(--mint);margin:4px 0}.detail{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:11px}.detail:last-child{border-bottom:0}.detail span:first-child{color:var(--muted)}.price{font-size:19px;color:var(--mint);font-weight:800}.tiny{font-size:10px;color:var(--muted);line-height:1.5}.hidden{display:none!important}.footer{padding-top:9px;border-top:1px solid var(--border);text-align:center;color:#8190a6;font-size:10px}
+</style>
 </head>
 <body>
-  <header class="brand">
-    <div class="logo" aria-hidden="true">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"></path>
-        <path d="m8.5 12 2.2 2.2 4.8-5"></path>
-      </svg>
+<header class="brand"><div class="logo" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></div><div><h1>Trust AI</h1><div class="subtitle">AI Answer Checker</div></div><span class="status" id="statusBadge">READY</span></header>
+<nav class="tabs" aria-label="Trust AI sections"><button class="tab active" data-view="checkView">Check</button><button class="tab" data-view="modelsView">Models</button><button class="tab" data-view="accountView">Account</button></nav>
+
+<section class="view active" id="checkView">
+  <h2>Check an AI answer</h2><p class="desc">Highlight an answer on the page, or paste it below. Review it before checking.</p>
+  <div class="field"><label for="answerText">ANSWER TEXT</label><textarea id="answerText" maxlength="12000" placeholder="Paste the AI answer here…"></textarea></div>
+  <div class="inline"><button class="btn" id="loadSelection">Load highlighted text</button><button class="btn" id="clearAnswer">Clear</button></div>
+  <div class="panel" style="margin-top:10px"><div class="section-heading" style="margin-top:0"><h3>ESTIMATED CHECK PRICE</h3><span class="pill" id="modelCount">2 models</span></div><div class="price" id="costPreview">$—</div><div class="tiny">Estimate only. The backend calculates the actual charge after checking.</div></div>
+  <button class="btn primary" id="checkAnswer">Run Trust Check</button>
+  <p class="message" id="checkMessage" role="status" aria-live="polite"></p>
+  <div id="resultArea" class="hidden">
+    <div class="score-card"><div class="score-label">COMBINED TRUST SCORE</div><div class="score"><span id="trustScore">—</span><small> / 100</small></div><div class="result-meta" id="scoreSummary">Combined score from selected models and weights</div></div>
+    <div class="panel"><div class="detail"><span>Actual check cost</span><strong id="actualCost">—</strong></div><div class="detail"><span>Models used</span><strong id="usedModels">—</strong></div><div class="detail"><span>Balance remaining</span><strong id="remainingBalance">Refresh account</strong></div></div>
+    <button class="btn primary" id="viewEvidence">View full evidence on website</button>
+  </div>
+</section>
+
+<section class="view" id="modelsView">
+  <h2>Choose your AI models</h2><p class="desc">Select 2–10 models. Each model is an evaluator in your combined score.</p>
+  <div class="field"><label for="modelSearch">SEARCH MODELS</label><input class="search" id="modelSearch" type="text" placeholder="Search by model or provider…"></div>
+  <div class="section-heading"><h3>AVAILABLE MODELS</h3><span class="pill" id="selectionCount">2 selected</span></div>
+  <div class="models" id="modelList"></div>
+  <div class="section-heading"><h3>MODEL WEIGHTS</h3><button class="btn" id="equalWeights" style="width:auto;padding:5px 8px;font-size:10px">Equal weights</button></div>
+  <p class="tiny">Weights must total exactly 100%. Sliders do not change other sliders automatically.</p>
+  <div class="weights" id="weightsList"></div>
+  <div class="total valid" id="weightTotal">Total: 100%</div>
+  <p class="message" id="modelMessage" role="status" aria-live="polite"></p>
+  <button class="btn primary" id="saveModels">Use these models</button>
+</section>
+
+<section class="view" id="accountView">
+  <h2>Your account</h2><p class="desc">Your Trust AI profile and wallet balance.</p>
+  <div id="signedOutPanel" class="panel">
+    <div class="section-heading" style="margin-top:0"><h3 id="authTitle">Log in to Trust AI</h3><span class="pill">SECURE LOGIN</span></div>
+    <div id="loginFields">
+      <div class="field"><label for="email">EMAIL</label><input id="email" type="email" autocomplete="username" placeholder="you@example.com"></div>
+      <div class="field"><label for="password">PASSWORD</label><input id="password" type="password" autocomplete="current-password" placeholder="Your password"></div>
+      <button class="btn primary" id="loginButton">Log in</button>
+      <button class="btn secondary" id="showSignup">Create an account</button>
     </div>
-    <div>
-      <h1>Trust AI</h1>
-      <div class="subtitle">AI Answer Checker</div>
+    <div id="signupFields" class="hidden">
+      <div class="field"><label for="fullName">FULL NAME</label><input id="fullName" type="text" maxlength="120" autocomplete="name"></div>
+      <div class="field"><label for="dob">DATE OF BIRTH</label><input id="dob" type="date" autocomplete="bday"></div>
+      <div class="field"><label for="signupEmail">EMAIL</label><input id="signupEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label for="signupPassword">PASSWORD (8+ CHARACTERS)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password"></div>
+      <button class="btn primary" id="signupButton">Create account</button>
+      <button class="btn secondary" id="showLogin">Back to log in</button>
     </div>
-    <span class="status">READY</span>
-  </header>
-
-  <div class="rule"></div>
-
-  <main>
-    <h2>Review selected answer</h2>
-    <p class="description">Highlight an AI answer on the page, then load it here. You can also paste text below.</p>
-
-    <label class="text-label" for="answerText">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#66e0b7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M4 6h16M4 12h16M4 18h10"></path>
-      </svg>
-      Selected text
-    </label>
-
-    <div class="text-card">
-      <textarea id="answerText" maxlength="12000" placeholder="Your highlighted answer will appear here…"></textarea>
-    </div>
-
-    <button type="button" class="small-action" id="loadSelection">Load highlighted text</button>
-    <button type="button" class="primary" id="checkAnswer">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 12.5 11 14.5 15.5 9.5"></path><circle cx="12" cy="12" r="9"></circle>
-      </svg>
-      Copy &amp; Open Trust AI
-    </button>
-    <p class="hint">Review the text first. It will be copied so you can paste it into the checker.</p>
-    <p class="message" id="message" role="status" aria-live="polite"></p>
-  </main>
-
-  <footer class="footer">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-      <path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"></path>
-    </svg>
-    Review first · Check when ready
-  </footer>
-  <script src="popup.js"></script>
-</body>
-</html>
+    <p class="message" id="authMessage" role="status" aria-live="polite"></p>
+    <p class="tiny">Your password is sent directly to Supabase Authentication. It is not stored by Trust AI's extension.</p>
+  </div>
+  <div id="accountPanel" class="panel hidden">
+    <div class="section-heading" style="margin-top:0"><h3 id="accountName">Your account</h3><span class="pill">SIGNED IN</span></div>
+    <div class="balance"> <span id="balanceValue">—</span></div>
+    <div class="tiny">Available wallet balance</div>
+    <div class="detail"><span>Email</span><strong id="accountEmail">—</strong></div>
+    <div class="detail"><span>Full name</span><strong id="accountFullName">—</strong></div>
+    <div class="detail"><span>Date of birth</span><strong id="accountDob">—</strong></div>
+    <p class="message" id="accountMessage" role="status" aria-live="polite"></p>
+    <button class="btn primary" id="addFunds">Add funds / redeem code</button>
+    <button class="btn secondary" id="refreshAccount">Refresh account</button>
+    <button class="btn secondary" id="logoutButton">Log out</button>
+  </div>
+</section>
+<div class="footer">Review first · Evidence and funds open on the website</div>
+<script src="popup.js"></script>
+</body></html>

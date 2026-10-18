@@ -1,9 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Trust AI",
-  "version": "1.1.0",
-  "description": "Review selected AI text and open Trust AI to check it.",
-  "permissions": ["activeTab", "scripting"],
+  "version": "1.2.0",
+  "description": "Check AI answers, view the combined Trust Score, manage models, and view your account.",
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": [
+    "https://iirxewgecavovbasafud.supabase.co/*",
+    "https://trustai-backend-93qs.onrender.com/*",
+    "https://rat-os-dev.github.io/TrustAI/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "Trust AI",
     "default_popup": "popup.html"
