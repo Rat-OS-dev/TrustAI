@@ -23,9 +23,7 @@ export const MODEL_CATALOG = [
   { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', provider: 'google', family: 'Google Gemini', description: 'Strong all-rounder for evaluation' },
   { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', provider: 'google', family: 'Google Gemini', description: 'Balanced speed and reasoning' },
   { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', provider: 'google', family: 'Google Gemini', description: 'High-capability general model' },
-  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', provider: 'google', family: 'Google Gemini', description: 'Advanced reasoning; preview model' },
-  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite', provider: 'google', family: 'Google Gemini', description: 'Cost-efficient model for repeated checks' },
-  { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite', provider: 'google', family: 'Google Gemini', description: 'Fast, lower-cost evaluation option' }
+  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', provider: 'google', family: 'Google Gemini', description: 'Advanced reasoning; preview model' }
 ];
 
 export const MODEL_BY_ID = Object.fromEntries(
