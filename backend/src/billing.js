@@ -27,7 +27,7 @@ const MODEL_RATES = {
   'gpt-5-mini': { input: 0.25, cachedInput: 0.025, output: 2.00 },
   'gpt-5-nano': { input: 0.05, cachedInput: 0.005, output: 0.40 },
   'gpt-4.1': { input: 2.00, cachedInput: 0.50, output: 8.00 },
-  'gpt-4o-mini': { input: 0.15, cachedInput: 0.075, output: 0.60 }
+  'gpt-4o-mini': { input: 0.15, cachedInput: 0.075, output: 0.60 },
 
   // Anthropic / Claude: USD per 1 million tokens. Cache-specific discounts are not applied.
   'claude-opus-5-5': { input: 4.00, cachedInput: 4.00, output: 20.00 },
