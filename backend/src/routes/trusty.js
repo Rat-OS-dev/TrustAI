@@ -140,13 +140,15 @@ router.post('/chat', async (req, res) => {
 
   try {
     const startingBalance = await getWallet(userId);
-    if (startingBalance <= 0) {
-      return res.status(402).json({ error: 'Your wallet is empty. Add funds before chatting with Trusty.' });
-    }
-
     const queries = Object.fromEntries(MODEL_SET.map((model) => [model.id, makeQueryFunction(model.id)]));
     const chatTranscript = transcript(messages);
     const latestQuestion = messages[messages.length - 1].content;
+    const requiredReserve = estimateTrustyReservation(chatTranscript, latestQuestion);
+    if (startingBalance + 1e-10 < requiredReserve) {
+      return res.status(402).json({
+        error: 'Your wallet needs about $' + requiredReserve.toFixed(4) + ' available before Trusty can start this message. This is a temporary safety estimate; you are charged only for reported API usage. Add funds and try again.'
+      });
+    }
 
     // Stage 1: all six models independently draft an answer.
     const drafts = await Promise.all(MODEL_SET.map(async (model) => {
