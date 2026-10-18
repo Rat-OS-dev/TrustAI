@@ -88,14 +88,17 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
 
   // GPT-5 can spend completion tokens on internal reasoning. A tiny output
   // budget (especially for a vote) can therefore produce no visible answer.
-  // Keep reasoning effort low and retry once with a larger budget if needed.
+  // Keep GPT-5 reasoning minimal so short-answer tasks leave tokens for visible text.
+  // Retry with progressively larger budgets if a provider still returns no text.
   const initialBudget = Number.isInteger(maxOutputTokens) ? maxOutputTokens : undefined;
   let totalUsage = null;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const budget = attempt === 0
       ? initialBudget
-      : Math.max(1600, (initialBudget || 1200) * 2);
+      : attempt === 1
+        ? Math.max(1600, (initialBudget || 1200) * 2)
+        : Math.max(4000, (initialBudget || 1200) * 4);
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -108,7 +111,7 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
-        ...(modelId.startsWith('gpt-5') ? { reasoning_effort: 'low' } : {}),
+        ...(modelId.startsWith('gpt-5') ? { reasoning_effort: 'minimal' } : {}),
         ...(Number.isInteger(budget) ? { max_completion_tokens: budget } : {})
       })
     });
@@ -154,8 +157,8 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
 
     const finishReason = data?.choices?.[0]?.finish_reason || 'unknown';
     console.warn(`OpenAI API returned no visible text for ${modelId} (attempt ${attempt + 1}, finish_reason=${finishReason}).`);
-    if (attempt === 1) {
-      throw new Error(`${modelId} returned an empty response after retry (finish_reason=${finishReason}).`);
+    if (attempt === 2) {
+      throw new Error(`${modelId} returned an empty response after ${attempt + 1} attempts (finish_reason=${finishReason}).`);
     }
   }
 
@@ -168,13 +171,17 @@ async function callAnthropic(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxO
     throw new Error('ANTHROPIC_API_KEY is not configured.');
   }
 
-  // Short vote budgets can occasionally produce no visible text. Retry once
-  // with a larger budget, and include usage from both attempts for exact billing.
+  // Short budgets can be consumed by thinking blocks before visible text is emitted.
+  // Retry with progressively larger budgets, including all attempts in exact billing.
   let totalUsage = null;
   const initialBudget = Number.isInteger(maxOutputTokens) ? maxOutputTokens : 4096;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const budget = attempt === 0 ? initialBudget : Math.max(1024, initialBudget * 4);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const budget = attempt === 0
+      ? initialBudget
+      : attempt === 1
+        ? Math.max(1024, initialBudget * 2)
+        : Math.max(4096, initialBudget * 4);
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -222,8 +229,8 @@ async function callAnthropic(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxO
 
     const blockTypes = Array.isArray(data?.content) ? data.content.map(block => block?.type || 'unknown').join(',') : 'none';
     console.warn(`Anthropic API returned no visible text for ${modelId} (attempt ${attempt + 1}, stop_reason=${data?.stop_reason || 'unknown'}, content_types=${blockTypes}).`);
-    if (attempt === 1) {
-      throw new Error(`${modelId} returned an empty response after retry (stop_reason=${data?.stop_reason || 'unknown'}).`);
+    if (attempt === 2) {
+      throw new Error(`${modelId} returned an empty response after ${attempt + 1} attempts (stop_reason=${data?.stop_reason || 'unknown'}).`);
     }
   }
 
