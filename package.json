@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Trust AI desktop app for Windows and Linux",
   "main": "desktop/main.cjs",
-  "author": "Rat-OS-dev",
+  "author": {
+    "name": "Rat-OS-dev",
+    "email": "ryan@ratys.com"
+  },
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -37,7 +40,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -50,7 +55,10 @@
     },
     "linux": {
       "category": "Office",
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "synopsis": "Trust AI multi-model assistant and answer checker"
     }
   }
