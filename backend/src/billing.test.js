@@ -5,6 +5,8 @@ import {
   calculateModelUsageCost,
   calculateUsageCost,
   calculateCustomerPrice,
+  calculateTrustyCustomerPrice,
+  getTrustyMarkupPercent,
   estimateRequestCost
 } from './billing.js';
 
@@ -58,14 +60,22 @@ test('fails closed if a model has no configured billing rates', () => {
   );
 });
 
-test('applies one 20% markup when raw API cost is under $1', () => {
-  assert.equal(calculateCustomerPrice(0.5), 0.6);
-  assert.equal(calculateCustomerPrice(0.99), 1.188);
+test('regular Trust AI applies a flat 5% markup', () => {
+  assert.equal(calculateCustomerPrice(0.5), 0.525);
+  assert.equal(calculateCustomerPrice(0.99), 1.0395);
+  assert.equal(calculateCustomerPrice(2), 2.1);
 });
 
-test('applies one 10% markup when raw API cost is $1 or more', () => {
-  assert.equal(calculateCustomerPrice(1), 1.1);
-  assert.equal(calculateCustomerPrice(2), 2.2);
+test('Trusty applies 20% markup at or below $0.20', () => {
+  assert.equal(getTrustyMarkupPercent(0.20), 20);
+  assert.equal(calculateTrustyCustomerPrice(0.20), 0.24);
+  assert.equal(calculateTrustyCustomerPrice(0.10), 0.12);
+});
+
+test('Trusty applies 10% markup when raw API cost exceeds $0.20', () => {
+  assert.equal(getTrustyMarkupPercent(0.20000001), 10);
+  assert.equal(calculateTrustyCustomerPrice(0.25), 0.275);
+  assert.equal(calculateTrustyCustomerPrice(1), 1.1);
 });
 
 test('preflight estimate applies the correct single tiered markup', () => {
