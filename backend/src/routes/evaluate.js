@@ -86,13 +86,26 @@ Do not include markdown or any text outside the JSON object.
   const result = await queryProvider(prompt);
 
   let parsed;
+  const trimmedResult = String(result ?? '').trim();
+  const unfencedResult = trimmedResult
+    .replace(/^\u0060\u0060\u0060(?:json)?\s*/i, '')
+    .replace(/\s*\u0060\u0060\u0060$/, '')
+    .trim();
 
   try {
-    parsed = JSON.parse(result);
+    parsed = JSON.parse(unfencedResult);
   } catch {
-    throw new Error(
-      'A provider returned an invalid evaluation scores response.'
-    );
+    const start = unfencedResult.indexOf('{');
+    const end = unfencedResult.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      try {
+        parsed = JSON.parse(unfencedResult.slice(start, end + 1));
+      } catch {
+        throw new Error('A provider returned an invalid evaluation scores response.');
+      }
+    } else {
+      throw new Error('A provider returned an invalid evaluation scores response.');
+    }
   }
 
   const trustScore = parsed?.trustScore;
@@ -336,9 +349,13 @@ router.post('/', async (req, res) => {
         const meta = getModelOrThrow(modelId);
         const queryProvider = makeQueryFunction(modelId);
 
-        const claims = await extractClaims(answer, queryProvider);
-        const evidence = await verifyEvidence(claims, queryProvider);
-        const evidenceScore = calculateEvidenceScore(evidence);
+        let stage = 'claim extraction';
+        try {
+          const claims = await extractClaims(answer, queryProvider);
+          stage = 'evidence review';
+          const evidence = await verifyEvidence(claims, queryProvider);
+          stage = 'evidence scoring';
+          const evidenceScore = calculateEvidenceScore(evidence);
 
         if (evidenceScore === null) {
           throw new Error(
@@ -346,33 +363,40 @@ router.post('/', async (req, res) => {
           );
         }
 
-        const evaluationScores = await getEvaluatorScores(
-          answer,
-          evidence,
-          queryProvider
-        );
-
-        const usage = queryProvider.getUsage();
-
-        if (!usage || !usage.complete || usage.requests === 0) {
-          throw new Error(
-            `${meta.name} did not report complete token usage, so its API cost cannot be calculated safely.`
-          );
-        }
-
-        return [
-          modelId,
-          {
-            modelId,
-            name: meta.name,
-            family: meta.family,
-            trustScore: evaluationScores.trustScore,
-            confidenceScore: evaluationScores.confidenceScore,
-            evidenceScore,
+          stage = 'score evaluation';
+          const evaluationScores = await getEvaluatorScores(
+            answer,
             evidence,
-            usage
+            queryProvider
+          );
+
+          stage = 'token usage validation';
+          const usage = queryProvider.getUsage();
+
+          if (!usage || !usage.complete || usage.requests === 0) {
+            throw new Error(
+              `${meta.name} did not report complete token usage, so its API cost cannot be calculated safely.`
+            );
           }
-        ];
+
+          return [
+            modelId,
+            {
+              modelId,
+              name: meta.name,
+              family: meta.family,
+              trustScore: evaluationScores.trustScore,
+              confidenceScore: evaluationScores.confidenceScore,
+              evidenceScore,
+              evidence,
+              usage
+            }
+          ];
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : 'Unknown error';
+          console.error(`Evaluation step failed for model ${modelId} during ${stage}: ${reason}`);
+          throw new Error(`Model ${modelId} failed during ${stage}: ${reason}`);
+        }
       })
     );
 

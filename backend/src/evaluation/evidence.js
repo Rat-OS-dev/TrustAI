@@ -27,6 +27,34 @@ Return ONLY a valid JSON array. Each item must have:
 Do not invent sources. Empty sources array is fine when relying on established knowledge.
 `;
 
+function parseJsonResponse(response) {
+  if (typeof response !== 'string') {
+    throw new Error('Evidence review response was not text.');
+  }
+
+  const trimmed = response.trim();
+  const withoutFence = trimmed
+    .replace(/^\u0060\u0060\u0060(?:json)?\s*/i, '')
+    .replace(/\s*\u0060\u0060\u0060$/, '')
+    .trim();
+
+  try {
+    return JSON.parse(withoutFence);
+  } catch {
+    // Some models add a short preamble. Only parse a complete outer JSON array.
+    const start = withoutFence.indexOf('[');
+    const end = withoutFence.lastIndexOf(']');
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(withoutFence.slice(start, end + 1));
+      } catch {
+        // Fall through to a safe, non-content-revealing error.
+      }
+    }
+    throw new Error('Evidence review returned invalid JSON.');
+  }
+}
+
 export async function verifyEvidence(claims, queryProvider) {
   if (!Array.isArray(claims)) {
     throw new Error('Claims must be an array.');
@@ -40,13 +68,7 @@ export async function verifyEvidence(claims, queryProvider) {
     `${EVIDENCE_PROMPT}\n\nClaims to review:\n${JSON.stringify(claims)}`
   );
 
-  let evidence;
-
-  try {
-    evidence = JSON.parse(response);
-  } catch {
-    throw new Error('Evidence review returned invalid JSON.');
-  }
+  const evidence = parseJsonResponse(response);
 
   const validStatuses = new Set([
     'supported',
