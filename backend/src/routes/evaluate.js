@@ -407,7 +407,7 @@ router.post('/', async (req, res) => {
         model_count: modelCount,
         pricing_basis: 'provider_reported_tokens',
         api_cost_usd: actualApiCost,
-        markup_percent: 10,
+        markup_percent: actualApiCost < 1 ? 20 : 10,
         api_model_costs_usd: apiModelCosts,
         model_costs_usd: modelCosts,
         usage_by_model: Object.fromEntries(
