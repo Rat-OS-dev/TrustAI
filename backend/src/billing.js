@@ -18,6 +18,10 @@ const MODEL_RATES = {
   // This legacy ID redirects to Grok 4.3 on xAI's API.
   'grok-4-1-fast-reasoning': { input: 1.25, cachedInput: 0.20, output: 2.50 },
 
+  'grok-4.20-0309-reasoning': { input: 1.25, cachedInput: 0.20, output: 2.50 },
+  'grok-4.20-0309-non-reasoning': { input: 1.25, cachedInput: 0.20, output: 2.50 },
+  'grok-4.20-multi-agent-0309': { input: 1.25, cachedInput: 0.20, output: 2.50 },
+
   // OpenAI: input, cached input, output (USD per 1M tokens)
   'gpt-5': { input: 1.25, cachedInput: 0.125, output: 10.00 },
   'gpt-5-mini': { input: 0.25, cachedInput: 0.025, output: 2.00 },
