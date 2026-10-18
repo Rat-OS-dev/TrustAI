@@ -10,7 +10,11 @@ import {
   calculateEvidenceScore
 } from '../scoring/trustScore.js';
 
-import { estimateRequestCost, calculateUsageCost } from '../billing.js';
+import {
+  estimateRequestCost,
+  calculateUsageCost,
+  getMarkupPercent
+} from '../billing.js';
 import {
   MODEL_BY_ID,
   MIN_MODELS,
@@ -431,7 +435,7 @@ router.post('/', async (req, res) => {
         model_count: modelCount,
         pricing_basis: 'provider_reported_tokens',
         api_cost_usd: actualApiCost,
-        markup_percent: actualApiCost < 1 ? 20 : 10,
+        markup_percent: getMarkupPercent(actualApiCost),
         api_model_costs_usd: apiModelCosts,
         model_costs_usd: modelCosts,
         usage_by_model: Object.fromEntries(
