@@ -158,7 +158,7 @@ async function callAnthropic(modelId, prompt) {
   }
 
   const result = Array.isArray(data?.content)
-    ? data.content.filter(block => block?.type === 'text').map(block => block.text || '').join('\\n')
+    ? data.content.filter(block => block?.type === 'text').map(block => block.text || '').join('\n')
     : '';
 
   if (!result.trim()) {
