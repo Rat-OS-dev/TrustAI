@@ -1,9 +1,6 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 
-import { queryGrok } from '../providers/xai.js';
-import { queryOpenAI } from '../providers/openai.js';
-
 import { extractClaims } from '../evaluation/claims.js';
 import { verifyEvidence } from '../evaluation/evidence.js';
 import { buildEvaluationResponse } from '../evaluation/response.js';
@@ -14,15 +11,15 @@ import {
 } from '../scoring/trustScore.js';
 
 import { calculateInputCost } from '../billing.js';
+import {
+  MODEL_BY_ID,
+  MIN_MODELS,
+  MAX_MODELS,
+  getModelOrThrow
+} from '../models.js';
+import { makeQueryFunction } from '../providers/query.js';
 
 const router = Router();
-
-const PROVIDERS = ['grok', 'openai'];
-
-const queryFunctions = {
-  grok: queryGrok,
-  openai: queryOpenAI
-};
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
@@ -122,29 +119,17 @@ Do not include markdown or any text outside the JSON object.
     );
   }
 
-  return {
-    trustScore,
-    confidenceScore
-  };
+  return { trustScore, confidenceScore };
 }
 
-function getNonNeutralTrustScore(weights, providerResults) {
+function getNonNeutralTrustScore(modelIds, weights, providerResults) {
   const providerTrustScores = Object.fromEntries(
-    PROVIDERS.map((provider) => [
-      provider,
-      providerResults[provider].trustScore
-    ])
+    modelIds.map((id) => [id, providerResults[id].trustScore])
   );
 
-  const rawScore = calculateTrustScore(
-    weights,
-    providerTrustScores
-  );
+  const rawScore = calculateTrustScore(weights, providerTrustScores);
 
-  if (
-    typeof rawScore !== 'number' ||
-    !Number.isFinite(rawScore)
-  ) {
+  if (typeof rawScore !== 'number' || !Number.isFinite(rawScore)) {
     throw new Error('The combined Trust Score calculation failed.');
   }
 
@@ -154,67 +139,42 @@ function getNonNeutralTrustScore(weights, providerResults) {
     return roundedScore;
   }
 
-  if (rawScore < 50) {
-    return 49;
-  }
-
-  if (rawScore > 50) {
-    return 51;
-  }
+  if (rawScore < 50) return 49;
+  if (rawScore > 50) return 51;
 
   let supportedWeight = 0;
   let contradictedWeight = 0;
 
-  for (const provider of PROVIDERS) {
-    const weight = weights[provider];
-    const evidence = providerResults[provider].evidence;
+  for (const id of modelIds) {
+    const weight = weights[id];
+    const evidence = providerResults[id].evidence;
 
     for (const item of evidence) {
       const status =
-        typeof item?.status === 'string'
-          ? item.status.toLowerCase()
-          : '';
+        typeof item?.status === 'string' ? item.status.toLowerCase() : '';
 
-      if (status === 'supported') {
-        supportedWeight += weight;
-      } else if (status === 'contradicted') {
-        contradictedWeight += weight;
-      }
+      if (status === 'supported') supportedWeight += weight;
+      else if (status === 'contradicted') contradictedWeight += weight;
     }
   }
 
-  if (supportedWeight > contradictedWeight) {
-    return 51;
-  }
+  if (supportedWeight > contradictedWeight) return 51;
+  if (contradictedWeight > supportedWeight) return 49;
 
-  if (contradictedWeight > supportedWeight) {
-    return 49;
-  }
+  const confidenceDirection = modelIds.reduce((total, id) => {
+    const result = providerResults[id];
+    return (
+      total +
+      weights[id] * result.confidenceScore * (result.trustScore - 50)
+    );
+  }, 0);
 
-  const confidenceDirection = PROVIDERS.reduce(
-    (total, provider) => {
-      const result = providerResults[provider];
-
-      return total +
-        weights[provider] *
-        result.confidenceScore *
-        (result.trustScore - 50);
-    },
-    0
-  );
-
-  if (confidenceDirection > 0) {
-    return 51;
-  }
-
-  if (confidenceDirection < 0) {
-    return 49;
-  }
-
+  if (confidenceDirection > 0) return 51;
+  if (confidenceDirection < 0) return 49;
   return 49;
 }
 
-function validateRequest(answer, weights) {
+function validateRequest(answer, models, weights) {
   if (typeof answer !== 'string' || !answer.trim()) {
     return 'Please provide text to fact-check.';
   }
@@ -223,36 +183,56 @@ function validateRequest(answer, weights) {
     return 'Text must be 12,000 characters or fewer.';
   }
 
+  if (!Array.isArray(models) || models.length < MIN_MODELS) {
+    return `Select at least ${MIN_MODELS} models.`;
+  }
+
+  if (models.length > MAX_MODELS) {
+    return `You can select at most ${MAX_MODELS} models.`;
+  }
+
+  const unique = new Set(models);
+  if (unique.size !== models.length) {
+    return 'Duplicate models are not allowed.';
+  }
+
+  for (const id of models) {
+    if (!MODEL_BY_ID[id]) {
+      return `Unknown model: ${id}`;
+    }
+  }
+
   if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {
     return 'Please provide model weights.';
   }
 
-  const validWeights = PROVIDERS.every(
-    (provider) =>
-      typeof weights[provider] === 'number' &&
-      Number.isFinite(weights[provider]) &&
-      weights[provider] >= 5 &&
-      weights[provider] <= 100
-  );
+  const minWeight = Math.max(1, Math.floor(100 / models.length) - 5);
+  // Allow as low as 5% when possible, but for many models allow lower
+  const floor = models.length >= 8 ? 1 : models.length >= 5 ? 3 : 5;
 
-  const total = PROVIDERS.reduce(
-    (sum, provider) => sum + weights[provider],
-    0
-  );
+  for (const id of models) {
+    const w = weights[id];
+    if (typeof w !== 'number' || !Number.isFinite(w) || w < floor) {
+      return `Each selected model needs a weight of at least ${floor}%.`;
+    }
+  }
 
-  if (!validWeights || Math.abs(total - 100) > 0.000001) {
-    return 'Grok and OpenAI weights must each be 5–100%, and total 100%.';
+  // No extra keys required, but only selected models count
+  const total = models.reduce((sum, id) => sum + Number(weights[id]), 0);
+
+  if (Math.abs(total - 100) > 0.000001) {
+    return 'Model weights must total exactly 100%.';
   }
 
   return null;
 }
 
-async function chargeUserForInput(userId, characterCount) {
+async function chargeUserForInput(userId, characterCount, modelCount) {
   if (!supabaseAdmin) {
     throw new Error('Billing is not configured on the server.');
   }
 
-  const cost = calculateInputCost(characterCount);
+  const cost = calculateInputCost(characterCount, modelCount);
 
   const { data: wallet, error: walletError } = await supabaseAdmin
     .from('wallets')
@@ -295,9 +275,21 @@ async function chargeUserForInput(userId, characterCount) {
 }
 
 router.post('/', async (req, res) => {
-  const { answer, weights } = req.body ?? {};
+  const body = req.body ?? {};
+  let { answer, models, weights } = body;
 
-  const validationError = validateRequest(answer, weights);
+  // Back-compat: old clients sent { weights: { grok, openai } }
+  if (!models && weights && typeof weights === 'object') {
+    if ('grok' in weights && 'openai' in weights) {
+      models = ['grok-4.7', 'gpt-5'];
+      weights = {
+        'grok-4.7': weights.grok,
+        'gpt-5': weights.openai
+      };
+    }
+  }
+
+  const validationError = validateRequest(answer, models, weights);
 
   if (validationError) {
     return res.status(400).json({ error: validationError });
@@ -312,7 +304,8 @@ router.post('/', async (req, res) => {
   }
 
   const inputLength = answer.trim().length;
-  const estimatedCost = calculateInputCost(inputLength);
+  const modelCount = models.length;
+  const estimatedCost = calculateInputCost(inputLength, modelCount);
 
   try {
     if (supabaseAdmin) {
@@ -340,8 +333,9 @@ router.post('/', async (req, res) => {
     }
 
     const providerEntries = await Promise.all(
-      PROVIDERS.map(async (provider) => {
-        const queryProvider = queryFunctions[provider];
+      models.map(async (modelId) => {
+        const meta = getModelOrThrow(modelId);
+        const queryProvider = makeQueryFunction(modelId);
 
         const claims = await extractClaims(answer, queryProvider);
         const evidence = await verifyEvidence(claims, queryProvider);
@@ -349,7 +343,7 @@ router.post('/', async (req, res) => {
 
         if (evidenceScore === null) {
           throw new Error(
-            `No checkable evidence results were returned for ${provider}.`
+            `No checkable evidence results were returned for ${meta.name}.`
           );
         }
 
@@ -360,8 +354,11 @@ router.post('/', async (req, res) => {
         );
 
         return [
-          provider,
+          modelId,
           {
+            modelId,
+            name: meta.name,
+            family: meta.family,
             trustScore: evaluationScores.trustScore,
             confidenceScore: evaluationScores.confidenceScore,
             evidenceScore,
@@ -374,6 +371,7 @@ router.post('/', async (req, res) => {
     const providerResults = Object.fromEntries(providerEntries);
 
     const trustScore = getNonNeutralTrustScore(
+      models,
       weights,
       providerResults
     );
@@ -381,11 +379,15 @@ router.post('/', async (req, res) => {
     let billing = {
       charged: false,
       cost_usd: estimatedCost,
-      balance_usd: null
+      balance_usd: null,
+      model_count: modelCount
     };
 
     try {
-      billing = await chargeUserForInput(userId, inputLength);
+      billing = {
+        ...(await chargeUserForInput(userId, inputLength, modelCount)),
+        model_count: modelCount
+      };
     } catch (chargeError) {
       console.error(
         'Post-evaluation charge failed:',
@@ -406,10 +408,12 @@ router.post('/', async (req, res) => {
       providers: providerResults
     });
 
+    responseData.models = models;
     responseData.billing = {
       cost_usd: billing.cost_usd,
       balance_usd: billing.balance_usd,
-      charged: billing.charged
+      charged: billing.charged,
+      model_count: modelCount
     };
 
     return res.status(200).json(responseData);
