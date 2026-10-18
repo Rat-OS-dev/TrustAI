@@ -145,7 +145,7 @@ async function sendMessage(text){
     history.push({role:'assistant',content:data.answer});
     try{await saveConversation();}catch(saveError){setStatus('Reply received, but chat history could not be saved: '+(saveError.message||'unknown error'),true);}
     if(typeof data.balance_usd==='number')$('balanceLabel').textContent='Wallet balance: '+money(data.balance_usd);
-    setStatus('Charged exact configured API token cost; no markup.');
+    setStatus('Reply complete. Your account was charged using Trusty’s current pricing.');
   }catch(error){
     thinking.remove();
     history.pop();
