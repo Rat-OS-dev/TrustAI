@@ -11,8 +11,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ok:false});
       return;
     }
-    const tab = await chrome.tabs.create({url:SITE_URL+"login.html?mode=login"});
+    const tab = await chrome.tabs.create({url:"about:blank"});
     await chrome.storage.session.set({[HANDOFF_KEY]:{tabId:tab.id,result,session,phase:"session"}});
+    await chrome.tabs.update(tab.id,{url:SITE_URL+"login.html?mode=login"});
     sendResponse({ok:true});
   })().catch(() => sendResponse({ok:false}));
   return true;
