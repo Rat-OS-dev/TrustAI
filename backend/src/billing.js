@@ -37,6 +37,13 @@ function roundUsd(value) {
   return Math.round((value + Number.EPSILON) * 1e8) / 1e8;
 }
 
+// Apply the two requested 10% layers separately:
+// first 10% above provider API cost, then 10% on that subtotal.
+export function calculateCustomerPrice(apiCost) {
+  const apiCostWithFirstMarkup = roundUsd(Math.max(0, Number(apiCost) || 0) * 1.10);
+  return roundUsd(apiCostWithFirstMarkup * 1.10);
+}
+
 /**
  * usage shape: { input_tokens, cached_input_tokens, output_tokens }
  * Cached input tokens are a subset of input_tokens, not additional tokens.
@@ -65,18 +72,28 @@ export function calculateModelUsageCost(modelId, usage) {
 }
 
 export function calculateUsageCost(usageByModel) {
-  const modelCosts = {};
-  let total = 0;
+  const apiModelCosts = {};
+  let apiTotal = 0;
 
   for (const [modelId, usage] of Object.entries(usageByModel || {})) {
     const cost = calculateModelUsageCost(modelId, usage);
-    modelCosts[modelId] = cost;
-    total += cost;
+    apiModelCosts[modelId] = cost;
+    apiTotal += cost;
   }
 
+  const apiCost = roundUsd(apiTotal);
+  const customerModelCosts = Object.fromEntries(
+    Object.entries(apiModelCosts).map(([modelId, cost]) => [
+      modelId,
+      calculateCustomerPrice(cost)
+    ])
+  );
+
   return {
-    cost_usd: roundUsd(total),
-    model_costs_usd: modelCosts
+    api_cost_usd: apiCost,
+    cost_usd: calculateCustomerPrice(apiCost),
+    api_model_costs_usd: apiModelCosts,
+    model_costs_usd: customerModelCosts
   };
 }
 
@@ -105,7 +122,7 @@ export function estimateRequestCost(characterCount, modelIds = []) {
     return sum + estimatedModelCost * safetyMultiplier;
   }, 0);
 
-  return roundUsd(total);
+  return calculateCustomerPrice(total);
 }
 
 /**
