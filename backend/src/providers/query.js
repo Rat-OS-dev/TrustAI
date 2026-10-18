@@ -125,6 +125,49 @@ async function callOpenAI(modelId, prompt) {
   return { result, usage: data?.usage };
 }
 
+
+async function callAnthropic(modelId, prompt) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is not configured.');
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: modelId,
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  const responseText = await response.text();
+  let data;
+  try { data = JSON.parse(responseText); } catch { data = null; }
+
+  if (!response.ok) {
+    const detail = data?.error?.message || responseText || 'No error details returned.';
+    console.error(`Anthropic API error for ${modelId} (${response.status}): ${detail}`);
+    throw new Error(`Anthropic API request failed for ${modelId} (${response.status}).`);
+  }
+
+  const result = Array.isArray(data?.content)
+    ? data.content.filter(block => block?.type === 'text').map(block => block.text || '').join('\n')
+    : '';
+
+  if (!result.trim()) {
+    throw new Error(`${modelId} returned an empty response.`);
+  }
+
+  return { result, usage: data?.usage };
+}
+
 /**
  * Query a catalog model. The returned function preserves the existing string
  * response contract while exposing aggregate provider usage for billing.
@@ -146,6 +189,8 @@ export function makeQueryFunction(modelId) {
       response = await callXai(model.id, prompt);
     } else if (model.provider === 'openai') {
       response = await callOpenAI(model.id, prompt);
+    } else if (model.provider === 'anthropic') {
+      response = await callAnthropic(model.id, prompt);
     } else {
       throw new Error(`Unsupported provider: ${model.provider}`);
     }
