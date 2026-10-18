@@ -18,12 +18,6 @@ export const MODEL_CATALOG = [
   { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'openai', family: 'OpenAI', description: 'Strong GPT-4.1 model' },
   { id: 'gpt-4o-mini', name: 'GPT-4o mini', provider: 'openai', family: 'OpenAI', description: 'Fast, affordable GPT-4o' },
 
-  // Google Gemini — selected for factual evaluation, reasoning, and cost options
-  { id: 'gemini-4-argon', name: 'Gemini 4 Argon', provider: 'google', family: 'Google Gemini', description: 'Flagship reasoning model' },
-  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', provider: 'google', family: 'Google Gemini', description: 'Strong all-rounder for evaluation' },
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', provider: 'google', family: 'Google Gemini', description: 'Balanced speed and reasoning' },
-  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', provider: 'google', family: 'Google Gemini', description: 'High-capability general model' },
-  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', provider: 'google', family: 'Google Gemini', description: 'Advanced reasoning; preview model' }
 ];
 
 export const MODEL_BY_ID = Object.fromEntries(
