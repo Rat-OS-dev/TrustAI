@@ -52,8 +52,7 @@
       line-height: 1.4; white-space: nowrap;
     }
     .model-price.cheap { color: #73e6b4; border-color: #28684f; background: #10251e; }
-    .model-price.medium { color: #ffd27a; border-color: #735a27; background: #2a2314; }
-    .model-price.expensive { color: #ff9da5; border-color: #75404a; background: #2b171d; }
+    .model-price.average { color: #ffd27a; border-color: #735a27; background: #2a2314; }
     @media (max-width: 440px) {
       .model-option { gap: 7px; padding: 9px; }
       .model-price { padding: 3px 6px; font-size: 0.7rem; }
@@ -187,15 +186,15 @@
     const BACKEND_URL = "https://trustai-backend-93qs.onrender.com";
 
     const MODEL_CATALOG = [
-      { id: "grok-4.7", name: "Grok 4.7", family: "xAI", description: "Flagship Grok model", priceTier: "expensive" },
-      { id: "grok-4.6", name: "Grok 4.6", family: "xAI", description: "Previous flagship Grok", priceTier: "expensive" },
-      { id: "grok-4.5", name: "Grok 4.5", family: "xAI", description: "Strong general Grok model", priceTier: "expensive" },
-      { id: "grok-4.3", name: "Grok 4.3", family: "xAI", description: "Long-context Grok model", priceTier: "medium" },
-      { id: "grok-4-1-fast-reasoning", name: "Grok 4 Fast", family: "xAI", description: "Fast, lower-cost Grok", priceTier: "medium" },
-      { id: "gpt-5", name: "GPT-5", family: "OpenAI", description: "Flagship GPT-5", priceTier: "expensive" },
-      { id: "gpt-5-mini", name: "GPT-5 mini", family: "OpenAI", description: "Faster, cheaper GPT-5", priceTier: "medium" },
+      { id: "grok-4.7", name: "Grok 4.7", family: "xAI", description: "Flagship Grok model", priceTier: "average" },
+      { id: "grok-4.6", name: "Grok 4.6", family: "xAI", description: "Previous flagship Grok", priceTier: "average" },
+      { id: "grok-4.5", name: "Grok 4.5", family: "xAI", description: "Strong general Grok model", priceTier: "average" },
+      { id: "grok-4.3", name: "Grok 4.3", family: "xAI", description: "Long-context Grok model", priceTier: "average" },
+      { id: "grok-4-1-fast-reasoning", name: "Grok 4 Fast", family: "xAI", description: "Fast, lower-cost Grok", priceTier: "average" },
+      { id: "gpt-5", name: "GPT-5", family: "OpenAI", description: "Flagship GPT-5", priceTier: "average" },
+      { id: "gpt-5-mini", name: "GPT-5 mini", family: "OpenAI", description: "Faster, cheaper GPT-5", priceTier: "average" },
       { id: "gpt-5-nano", name: "GPT-5 nano", family: "OpenAI", description: "Smallest GPT-5 tier", priceTier: "cheap" },
-      { id: "gpt-4.1", name: "GPT-4.1", family: "OpenAI", description: "Strong GPT-4.1 model", priceTier: "expensive" },
+      { id: "gpt-4.1", name: "GPT-4.1", family: "OpenAI", description: "Strong GPT-4.1 model", priceTier: "average" },
       { id: "gpt-4o-mini", name: "GPT-4o mini", family: "OpenAI", description: "Fast, affordable GPT-4o", priceTier: "cheap" }
     ];
 
