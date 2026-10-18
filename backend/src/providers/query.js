@@ -3,6 +3,44 @@ import { getModelOrThrow } from '../models.js';
 const SYSTEM_PROMPT =
   'Review the supplied answer for factual reliability. Identify claims that need verification and provide supporting sources where possible. Do not assume a claim is true merely because it appears in the answer.';
 
+function normalizeUsage(usage) {
+  if (!usage || typeof usage !== 'object') return null;
+
+  const inputTokens = Number(usage.prompt_tokens ?? usage.input_tokens);
+  const outputTokens = Number(usage.completion_tokens ?? usage.output_tokens);
+
+  if (!Number.isFinite(inputTokens) || !Number.isFinite(outputTokens)) {
+    return null;
+  }
+
+  const promptDetails = usage.prompt_tokens_details || usage.input_tokens_details || {};
+  const cachedTokens = Number(
+    promptDetails.cached_tokens ??
+    promptDetails.cache_read_input_tokens ??
+    usage.cached_input_tokens ??
+    0
+  );
+
+  return {
+    input_tokens: Math.max(0, inputTokens),
+    cached_input_tokens: Math.max(0, Number.isFinite(cachedTokens) ? cachedTokens : 0),
+    output_tokens: Math.max(0, outputTokens)
+  };
+}
+
+function addUsage(total, usage) {
+  const normalized = normalizeUsage(usage);
+  if (!normalized) {
+    total.complete = false;
+    return;
+  }
+
+  total.input_tokens += normalized.input_tokens;
+  total.cached_input_tokens += normalized.cached_input_tokens;
+  total.output_tokens += normalized.output_tokens;
+  total.requests += 1;
+}
+
 async function callXai(modelId, prompt) {
   const apiKey = process.env.XAI_API_KEY;
 
@@ -37,7 +75,7 @@ async function callXai(modelId, prompt) {
     throw new Error(`${modelId} returned an empty response.`);
   }
 
-  return result;
+  return { result, usage: data.usage };
 }
 
 async function callOpenAI(modelId, prompt) {
@@ -84,27 +122,40 @@ async function callOpenAI(modelId, prompt) {
     throw new Error(`${modelId} returned an empty response.`);
   }
 
-  return result;
+  return { result, usage: data?.usage };
 }
 
 /**
- * Query a model from the catalog by id.
- * Returns a function (prompt) => Promise<string> for use in evaluation steps.
+ * Query a catalog model. The returned function preserves the existing string
+ * response contract while exposing aggregate provider usage for billing.
  */
 export function makeQueryFunction(modelId) {
   const model = getModelOrThrow(modelId);
-
-  return async function queryModel(prompt) {
-    if (model.provider === 'xai') {
-      return callXai(model.id, prompt);
-    }
-
-    if (model.provider === 'openai') {
-      return callOpenAI(model.id, prompt);
-    }
-
-    throw new Error(`Unsupported provider: ${model.provider}`);
+  const usageTotals = {
+    input_tokens: 0,
+    cached_input_tokens: 0,
+    output_tokens: 0,
+    requests: 0,
+    complete: true
   };
+
+  async function queryModel(prompt) {
+    let response;
+
+    if (model.provider === 'xai') {
+      response = await callXai(model.id, prompt);
+    } else if (model.provider === 'openai') {
+      response = await callOpenAI(model.id, prompt);
+    } else {
+      throw new Error(`Unsupported provider: ${model.provider}`);
+    }
+
+    addUsage(usageTotals, response.usage);
+    return response.result;
+  }
+
+  queryModel.getUsage = () => ({ ...usageTotals });
+  return queryModel;
 }
 
 // Keep simple exports for any legacy imports
