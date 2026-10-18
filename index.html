@@ -7,234 +7,52 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #141c30;
-      --panel-light: #1b2740;
-      --text: #f3f6ff;
-      --muted: #a8b3ca;
-      --accent: #7c9cff;
-      --green: #40d6a0;
-      --red: #ff737e;
-      --border: #2c3954;
+      --bg: #0b1020; --panel: #141c30; --panel-light: #1b2740; --text: #f3f6ff;
+      --muted: #a8b3ca; --accent: #7c9cff; --green: #40d6a0; --red: #ff737e; --border: #2c3954;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.6;
-    }
-    header {
-      position: relative;
-      padding: 28px 20px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-      background: #10182b;
-    }
-    .account-button {
-      position: absolute;
-      top: 22px;
-      left: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 42px;
-      height: 42px;
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      background: var(--panel);
-      color: var(--text);
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .account-button:hover, .account-button:focus-visible {
-      background: var(--panel-light);
-      border-color: var(--accent);
-      outline: none;
-    }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; line-height: 1.6; }
+    header { position: relative; padding: 28px 20px; text-align: center; border-bottom: 1px solid var(--border); background: #10182b; }
+    .account-button { position: absolute; top: 22px; left: 20px; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 50%; background: var(--panel); color: var(--text); text-decoration: none; cursor: pointer; }
+    .account-button:hover { background: var(--panel-light); border-color: var(--accent); }
     .account-button svg { width: 23px; height: 23px; }
     header h1 { margin: 0; font-size: 2.2rem; letter-spacing: -1px; }
     header p { margin: 8px 0 0; color: var(--muted); }
-    nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 18px;
-      border-bottom: 1px solid var(--border);
-    }
-    nav button {
-      padding: 11px 24px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      background: var(--panel);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    nav button.active {
-      background: var(--accent);
-      color: #0b1020;
-      border-color: var(--accent);
-      font-weight: bold;
-    }
-    main {
-      width: min(900px, 100%);
-      margin: 0 auto;
-      padding: 28px 20px 60px;
-    }
-    .page { display: none; }
-    .page.active { display: block; }
-    .panel {
-      margin-bottom: 22px;
-      padding: 24px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--panel);
-    }
-    h2 { margin-top: 0; font-size: 1.6rem; }
-    h3 { margin-top: 0; }
+    nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 18px; border-bottom: 1px solid var(--border); }
+    nav button { padding: 11px 24px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel); color: var(--text); cursor: pointer; font-size: 1rem; }
+    nav button.active { background: var(--accent); color: #0b1020; border-color: var(--accent); font-weight: bold; }
+    main { width: min(900px, 100%); margin: 0 auto; padding: 28px 20px 60px; }
+    .page { display: none; } .page.active { display: block; }
+    .panel { margin-bottom: 22px; padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+    h2 { margin-top: 0; font-size: 1.6rem; } h3 { margin-top: 0; }
     .description, .muted { color: var(--muted); }
     label { display: block; margin-bottom: 8px; font-weight: bold; }
-    textarea {
-      display: block;
-      width: 100%;
-      min-height: 220px;
-      resize: vertical;
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      outline: none;
-      background: #0b1222;
-      color: var(--text);
-      font: inherit;
-    }
+    textarea { display: block; width: 100%; min-height: 220px; resize: vertical; padding: 14px; border: 1px solid var(--border); border-radius: 9px; outline: none; background: #0b1222; color: var(--text); font: inherit; }
     textarea:focus { border-color: var(--accent); }
     .weight-control { margin: 22px 0; }
-    .weight-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
+    .weight-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
     .weight-heading label { margin: 0; }
-    .weight-value {
-      color: var(--accent);
-      font-weight: bold;
-      min-width: 45px;
-      text-align: right;
-    }
-    input[type="range"] {
-      display: block;
-      width: 100%;
-      margin: 12px 0;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
+    .weight-value { color: var(--accent); font-weight: bold; min-width: 45px; text-align: right; }
+    input[type="range"] { display: block; width: 100%; margin: 12px 0; accent-color: var(--accent); cursor: pointer; }
     .weight-note { color: var(--muted); font-size: 0.9rem; }
-    .total-box {
-      margin: 22px 0 12px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--panel-light);
-      text-align: center;
-      font-size: 1.15rem;
-      font-weight: bold;
-    }
-    .total-box.valid { border-color: var(--green); }
-    .total-box.invalid { border-color: var(--red); }
+    .total-box { margin: 22px 0 12px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-light); text-align: center; font-size: 1.15rem; font-weight: bold; }
+    .total-box.valid { border-color: var(--green); } .total-box.invalid { border-color: var(--red); }
     #weightMessage { min-height: 24px; margin-bottom: 18px; font-size: 0.95rem; }
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
-    }
-    .primary-button, .secondary-button {
-      padding: 12px 18px;
-      border: 0;
-      border-radius: 9px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .button-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+    .primary-button, .secondary-button { padding: 12px 18px; border: 0; border-radius: 9px; font-size: 1rem; font-weight: bold; cursor: pointer; }
     .primary-button { background: var(--accent); color: #0b1020; }
-    .primary-button:disabled {
-      background: #53617c;
-      color: #c4ccda;
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-    .secondary-button {
-      background: var(--panel-light);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .main-trust-box {
-      margin-top: 22px;
-      padding: 35px 20px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: #10182b;
-      text-align: center;
-    }
+    .primary-button:disabled { background: #53617c; color: #c4ccda; cursor: not-allowed; opacity: 0.7; }
+    .secondary-button { background: var(--panel-light); border: 1px solid var(--border); color: var(--text); }
+    .main-trust-box { margin-top: 22px; padding: 35px 20px; border: 1px solid var(--border); border-radius: 14px; background: #10182b; text-align: center; }
     .main-trust-label { color: var(--muted); font-size: 1.1rem; }
-    .main-trust-number {
-      margin-top: 12px;
-      min-height: 65px;
-      font-size: 3rem;
-      font-weight: bold;
-      color: var(--accent);
-    }
-    .ai-evidence-box {
-      margin-top: 20px;
-      padding: 22px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #10182b;
-    }
+    .main-trust-number { margin-top: 12px; min-height: 65px; font-size: 3rem; font-weight: bold; color: var(--accent); }
+    .ai-evidence-box { margin-top: 20px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: #10182b; }
     .ai-evidence-box h3 { margin-bottom: 16px; }
-    .confidence-label, .evidence-label {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      font-weight: bold;
-    }
-    .confidence-score {
-      min-height: 48px;
-      margin-top: 5px;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--accent);
-    }
-    .evidence-content {
-      min-height: 80px;
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--panel);
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
+    .confidence-label, .evidence-label { margin-top: 18px; color: var(--muted); font-size: 0.95rem; font-weight: bold; }
+    .confidence-score { min-height: 48px; margin-top: 5px; font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+    .evidence-content { min-height: 80px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); white-space: pre-wrap; overflow-wrap: anywhere; }
     .status-message { margin-top: 14px; color: var(--muted); }
-    footer {
-      padding: 20px;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.9rem;
-    }
-    @media (max-width: 600px) {
-      header h1 { font-size: 1.8rem; }
-      main { padding: 20px 14px 40px; }
-      .panel { padding: 18px; }
-      nav button { flex: 1; padding: 10px 14px; }
-      .account-button { top: 16px; left: 14px; width: 38px; height: 38px; }
-    }
+    footer { padding: 20px; border-top: 1px solid var(--border); color: var(--muted); text-align: center; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -248,56 +66,35 @@
     <h1>Trust AI</h1>
     <p>Fact-check claims, statements, and information with AI-assisted evidence.</p>
   </header>
-
   <nav aria-label="Main navigation">
     <button type="button" class="active" data-page="reviewPage" aria-selected="true">Fact-check</button>
     <button type="button" data-page="trustPage" aria-selected="false">Trust Score</button>
     <button type="button" data-page="evidencePage" aria-selected="false">Evidence</button>
   </nav>
-
   <main>
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">
-          Type or paste anything you want fact-checked below. Trust AI uses
-          Grok and OpenAI to assess factual claims and provide supporting evidence.
-        </p>
+        <p class="description">Type or paste anything you want fact-checked below. Trust AI uses Grok and OpenAI to assess factual claims and provide supporting evidence.</p>
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
           <textarea id="answerInput" maxlength="1000" placeholder="Type or paste anything you want fact-checked here..." required></textarea>
           <p class="weight-note">Maximum 1,000 characters.</p>
-          <p id="costPreview" class="weight-note" style="margin-top:8px;color:var(--accent);font-weight:bold;">
-            Estimated cost: $0.01
-          </p>
+          <p id="costPreview" class="weight-note" style="margin-top:8px;color:var(--accent);font-weight:bold;">Estimated cost: $0.01</p>
           <h3>Model Weights</h3>
-          <p class="description">
-            Set the importance of each AI manually. Moving one slider
-            will never change the other slider. Each AI must receive at
-            least 5%, and both percentages must add up to 100%.
-          </p>
+          <p class="description">Set the importance of each AI manually. Each AI must receive at least 5%, and both percentages must add up to 100%.</p>
           <div class="weight-control">
-            <div class="weight-heading">
-              <label for="grokWeight">Grok 4.7 (xAI)</label>
-              <span id="grokValue" class="weight-value">50%</span>
-            </div>
+            <div class="weight-heading"><label for="grokWeight">Grok 4.7 (xAI)</label><span id="grokValue" class="weight-value">50%</span></div>
             <input type="range" id="grokWeight" min="5" max="95" step="1" value="50" />
             <div class="weight-note">Minimum: 5%</div>
           </div>
           <div class="weight-control">
-            <div class="weight-heading">
-              <label for="openaiWeight">GPT-6-sol (OpenAI)</label>
-              <span id="openaiValue" class="weight-value">50%</span>
-            </div>
+            <div class="weight-heading"><label for="openaiWeight">GPT-6-sol (OpenAI)</label><span id="openaiValue" class="weight-value">50%</span></div>
             <input type="range" id="openaiWeight" min="5" max="95" step="1" value="50" />
             <div class="weight-note">Minimum: 5%</div>
           </div>
-          <div id="weightTotalBox" class="total-box valid" aria-live="polite">
-            Total: <span id="weightTotal">100%</span>
-          </div>
-          <p id="weightMessage" class="status-message" aria-live="polite">
-            Weights total 100%. You can fact-check the text.
-          </p>
+          <div id="weightTotalBox" class="total-box valid" aria-live="polite">Total: <span id="weightTotal">100%</span></div>
+          <p id="weightMessage" class="status-message" aria-live="polite">Weights total 100%. You can fact-check the text.</p>
           <div class="button-row">
             <button type="submit" id="checkButton" class="primary-button">Fact-check Text</button>
             <button type="button" id="resetWeights" class="secondary-button">Reset Weights</button>
@@ -306,14 +103,10 @@
         </form>
       </div>
     </section>
-
     <section id="trustPage" class="page">
       <div class="panel">
         <h2>Trust Score</h2>
-        <p class="description">
-          The overall Trust Score represents the evaluators’ assessment of
-          the factual reliability of the text you submitted.
-        </p>
+        <p class="description">The overall Trust Score represents the evaluators’ assessment of the factual reliability of the text you submitted.</p>
         <div class="main-trust-box">
           <div class="main-trust-label">Main Trust Score</div>
           <div id="overallTrustScore" class="main-trust-number" aria-live="polite"></div>
@@ -321,14 +114,10 @@
         </div>
       </div>
     </section>
-
     <section id="evidencePage" class="page">
       <div class="panel">
         <h2>Evidence</h2>
-        <p class="description">
-          Each evaluator AI provides its own evidence and Confidence Score
-          about claims in the submitted text. Scores use a 0–100 scale.
-        </p>
+        <p class="description">Each evaluator AI provides its own evidence and Confidence Score about claims in the submitted text.</p>
         <div class="ai-evidence-box">
           <h3>Grok Evidence</h3>
           <div class="confidence-label">Grok Confidence Score</div>
@@ -346,25 +135,18 @@
       </div>
     </section>
   </main>
-
   <footer>Trust AI — fact-check claims and information</footer>
-
   <script>
     const SUPABASE_URL = "https://iirxewgecavovbasafud.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_5Rp10ZaSKUEqlLwjYarvpQ_aVs0yh_p";
     const BACKEND_URL = "https://trustai-backend-93qs.onrender.com";
-
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
     async function getSession() {
       const { data, error } = await supabaseClient.auth.getSession();
       if (error) throw error;
       return data.session;
     }
-
     async function requireLogin() {
       const session = await getSession();
       if (!session?.access_token) {
@@ -374,16 +156,12 @@
       return session;
     }
 
-    // PAGE NAVIGATION
     const navigationButtons = document.querySelectorAll("nav button");
     const pages = document.querySelectorAll(".page");
-
     navigationButtons.forEach(button => {
       button.addEventListener("click", () => {
         const targetPage = button.dataset.page;
-        pages.forEach(page => {
-          page.classList.toggle("active", page.id === targetPage);
-        });
+        pages.forEach(page => page.classList.toggle("active", page.id === targetPage));
         navigationButtons.forEach(navButton => {
           const isActive = navButton === button;
           navButton.classList.toggle("active", isActive);
@@ -392,32 +170,25 @@
       });
     });
 
-    // PRICING: $0.01 per 100 characters, minimum $0.01 (input only)
     function calculateInputCost(charCount) {
       if (!charCount || charCount <= 0) return 0.01;
       const raw = (charCount / 100) * 0.01;
       return Math.max(0.01, Math.round(raw * 10000) / 10000);
     }
-
     function formatCost(cost) {
       return "$" + cost.toFixed(4).replace(/0+$/, "").replace(/\.$/, ".00");
     }
-
     const costPreview = document.getElementById("costPreview");
-
     function updateCostPreview() {
       const len = answerInput.value.trim().length;
       const cost = calculateInputCost(len || 1);
       if (!answerInput.value.trim()) {
         costPreview.textContent = "Estimated cost: $0.01 (minimum)";
       } else {
-        costPreview.textContent =
-          "Estimated cost: " + formatCost(cost) +
-          " (" + len + " characters)";
+        costPreview.textContent = "Estimated cost: " + formatCost(cost) + " (" + len + " characters)";
       }
     }
 
-    // MODEL WEIGHTS
     const weightInputs = {
       grok: document.getElementById("grokWeight"),
       openai: document.getElementById("openaiWeight")
@@ -429,19 +200,12 @@
     const formMessage = document.getElementById("formMessage");
 
     function getWeights() {
-      return {
-        grok: Number(weightInputs.grok.value),
-        openai: Number(weightInputs.openai.value)
-      };
+      return { grok: Number(weightInputs.grok.value), openai: Number(weightInputs.openai.value) };
     }
-
     function areWeightsValid(weights) {
       const values = Object.values(weights);
-      return values.every(value =>
-        Number.isInteger(value) && value >= 5 && value <= 95
-      ) && values.reduce((sum, value) => sum + value, 0) === 100;
+      return values.every(v => Number.isInteger(v) && v >= 5 && v <= 95) && values.reduce((s, v) => s + v, 0) === 100;
     }
-
     function updateWeightStatus() {
       const weights = getWeights();
       document.getElementById("grokValue").textContent = weights.grok + "%";
@@ -457,60 +221,43 @@
         : "Adjust the sliders manually. Each AI needs at least 5%, and the total must equal exactly 100%.";
       weightMessage.style.color = valid ? "var(--green)" : "var(--red)";
     }
-
     Object.values(weightInputs).forEach(slider => {
-      slider.addEventListener("input", () => {
-        formMessage.textContent = "";
-        updateWeightStatus();
-      });
+      slider.addEventListener("input", () => { formMessage.textContent = ""; updateWeightStatus(); });
     });
-
     document.getElementById("resetWeights").addEventListener("click", () => {
-      weightInputs.grok.value = 50;
-      weightInputs.openai.value = 50;
-      formMessage.textContent = "";
-      updateWeightStatus();
+      weightInputs.grok.value = 50; weightInputs.openai.value = 50;
+      formMessage.textContent = ""; updateWeightStatus();
     });
 
-    // FACT-CHECK SUBMIT (requires login)
     const reviewForm = document.getElementById("reviewForm");
     const answerInput = document.getElementById("answerInput");
-
     answerInput.addEventListener("input", updateCostPreview);
     updateCostPreview();
 
     reviewForm.addEventListener("submit", async event => {
       event.preventDefault();
-
       const answer = answerInput.value.trim();
       const weights = getWeights();
-
       if (!areWeightsValid(weights)) {
         updateWeightStatus();
-        formMessage.textContent =
-          "Cannot submit: Grok and OpenAI each need at least 5%, and their weights must total 100%.";
+        formMessage.textContent = "Cannot submit: Grok and OpenAI each need at least 5%, and their weights must total 100%.";
         return;
       }
-
       if (!answer) {
         formMessage.textContent = "Please type or paste something to fact-check first.";
         answerInput.focus();
         return;
       }
-
       if (answer.length > 1000) {
         formMessage.textContent = "Text must be 1,000 characters or fewer.";
         return;
       }
-
       const providerNames = ["grok", "openai"];
       checkButton.disabled = true;
       formMessage.textContent = "Fact-checking your text...";
-
       try {
         const session = await requireLogin();
         if (!session) return;
-
         const response = await fetch(`${BACKEND_URL}/api/evaluate`, {
           method: "POST",
           headers: {
@@ -519,70 +266,31 @@
           },
           body: JSON.stringify({ answer, weights })
         });
-
         const data = await response.json().catch(() => ({}));
-
         if (!response.ok) {
-          throw new Error(
-            data.error || data.message || `Evaluation request failed (${response.status}).`
-          );
+          throw new Error(data.error || data.message || `Evaluation request failed (${response.status}).`);
         }
-
-        if (
-          !data ||
-          typeof data.trustScore !== "number" ||
-          !Number.isFinite(data.trustScore) ||
-          data.trustScore < 0 ||
-          data.trustScore > 100 ||
-          !data.providers ||
-          typeof data.providers !== "object"
-        ) {
+        if (!data || typeof data.trustScore !== "number" || !data.providers) {
           throw new Error("The backend returned an invalid evaluation result.");
         }
-
         for (const name of providerNames) {
           const provider = data.providers[name];
-          if (
-            !provider ||
-            typeof provider.confidenceScore !== "number" ||
-            !Number.isFinite(provider.confidenceScore) ||
-            provider.confidenceScore < 0 ||
-            provider.confidenceScore > 100 ||
-            !Array.isArray(provider.evidence)
-          ) {
+          if (!provider || typeof provider.confidenceScore !== "number" || !Array.isArray(provider.evidence)) {
             throw new Error(`The ${name} result is incomplete or invalid.`);
           }
         }
-
-        document.getElementById("overallTrustScore").textContent =
-          String(Math.round(data.trustScore));
-
+        document.getElementById("overallTrustScore").textContent = String(Math.round(data.trustScore));
         for (const name of providerNames) {
           const provider = data.providers[name];
-          document.getElementById(`${name}Confidence`).textContent =
-            String(Math.round(provider.confidenceScore));
-
+          document.getElementById(`${name}Confidence`).textContent = String(Math.round(provider.confidenceScore));
           const evidenceText = provider.evidence.map(item => {
             const claim = item && typeof item.claim === "string" ? item.claim : "Claim not specified";
             const status = item && typeof item.status === "string" ? item.status : "unverified";
             const explanation = item && typeof item.explanation === "string" ? item.explanation : "No explanation provided.";
-            const sources =
-              item && Array.isArray(item.sources)
-                ? item.sources.map(source => {
-                    if (!source || typeof source !== "object") return "";
-                    const title = typeof source.title === "string" ? source.title : "Source";
-                    const url = typeof source.url === "string" ? source.url : "";
-                    return url ? `  - ${title}: ${url}` : `  - ${title}`;
-                  }).filter(Boolean).join("\n")
-                : "";
-            return `Claim: ${claim}\nStatus: ${status}\nExplanation: ${explanation}` +
-              (sources ? `\nSources:\n${sources}` : "");
+            return `Claim: ${claim}\nStatus: ${status}\nExplanation: ${explanation}`;
           }).join("\n\n");
-
-          document.getElementById(`${name}Evidence`).textContent =
-            evidenceText || "No evidence details returned.";
+          document.getElementById(`${name}Evidence`).textContent = evidenceText || "No evidence details returned.";
         }
-
         let successMsg = "Fact-check complete. View the Trust Score and Evidence pages.";
         if (data.billing && typeof data.billing.cost_usd === "number") {
           successMsg += " Charged " + formatCost(data.billing.cost_usd) + ".";
@@ -595,9 +303,9 @@
         const msg = error instanceof Error ? error.message : "Could not complete the evaluation.";
         if (msg.toLowerCase().includes("sign in") || msg.toLowerCase().includes("session")) {
           formMessage.textContent = "Please sign in to use Trust AI.";
-          window.setTimeout(() => {
-            window.location.href = "login.html?mode=login";
-          }, 1200);
+          window.setTimeout(() => { window.location.href = "login.html?mode=login"; }, 1200);
+        } else if (msg.toLowerCase().includes("insufficient") || msg.toLowerCase().includes("balance") || msg.toLowerCase().includes("funds") || msg.toLowerCase().includes("add funds")) {
+          formMessage.textContent = "Please add funds. " + msg + " Open your account page and use Add Funds.";
         } else {
           formMessage.textContent = msg;
         }
@@ -607,11 +315,7 @@
     });
 
     updateWeightStatus();
-
-    // Require login before using the fact-checker
-    requireLogin().catch(() => {
-      window.location.href = "login.html?mode=login";
-    });
+    requireLogin().catch(() => { window.location.href = "login.html?mode=login"; });
   </script>
 </body>
 </html>
