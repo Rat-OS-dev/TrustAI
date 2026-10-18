@@ -1,0 +1,65 @@
+{
+  "name": "trust-ai-desktop",
+  "version": "1.0.0",
+  "description": "Trust AI desktop app for Windows and Linux",
+  "main": "desktop/main.cjs",
+  "author": {
+    "name": "Rat-OS-dev",
+    "email": "ryan@ratys.com"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis",
+    "dist:linux": "electron-builder --linux AppImage deb"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "ai.trustai.desktop",
+    "productName": "Trust AI",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "artifactName": "Trust-AI-${version}-${os}-${arch}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Rat-OS-dev",
+        "repo": "TrustAI"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Trust AI"
+    },
+    "linux": {
+      "category": "Office",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "synopsis": "Trust AI multi-model assistant and answer checker"
+    }
+  }
+}
