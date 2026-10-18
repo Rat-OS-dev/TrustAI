@@ -108,7 +108,7 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
-        reasoning_effort: 'low',
+        ...(modelId.startsWith('gpt-5') ? { reasoning_effort: 'low' } : {}),
         ...(Number.isInteger(budget) ? { max_completion_tokens: budget } : {})
       })
     });
