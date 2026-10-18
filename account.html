@@ -179,6 +179,17 @@
       color: #0b1020;
     }
 
+    .support-number {
+      margin: 8px 0;
+      font-size: 1.35rem;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .support-button {
+      margin-top: 12px;
+    }
+
     .status-message {
       min-height: 24px;
       margin-top: 14px;
@@ -273,6 +284,19 @@
         <div class="detail-label">Email address</div>
         <div id="accountEmail" class="detail-value">Loading...</div>
       </div>
+
+      <section class="balance-card" aria-labelledby="supportHeading" style="margin-top:24px">
+        <h3 id="supportHeading" style="margin-top:0">Contact Trust AI Support</h3>
+        <p class="description">
+          Have a question or problem? Send a text message and I'll respond within 2 days (48 hours).
+        </p>
+        <div class="detail-label">Text-only support number</div>
+        <div class="support-number">406-202-2809</div>
+        <p class="note">
+          Text messages only — phone calls are not accepted. If your issue needs more information or a longer discussion, we can arrange a time to continue by text.
+        </p>
+        <a class="secondary-button support-button" href="sms:+14062022809">Text Support</a>
+      </section>
 
       <p
         id="accountMessage"
