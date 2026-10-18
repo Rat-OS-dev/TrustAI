@@ -28,6 +28,13 @@ const MODEL_RATES = {
   'gpt-5-nano': { input: 0.05, cachedInput: 0.005, output: 0.40 },
   'gpt-4.1': { input: 2.00, cachedInput: 0.50, output: 8.00 },
   'gpt-4o-mini': { input: 0.15, cachedInput: 0.075, output: 0.60 }
+
+  // Anthropic / Claude: USD per 1 million tokens. Cache-specific discounts are not applied.
+  'claude-opus-5-5': { input: 4.00, cachedInput: 4.00, output: 20.00 },
+  'claude-opus-5': { input: 5.00, cachedInput: 5.00, output: 25.00 },
+  'claude-sonnet-5-5': { input: 2.00, cachedInput: 2.00, output: 10.00 },
+  'claude-sonnet-5': { input: 2.00, cachedInput: 2.00, output: 10.00 },
+  'claude-haiku-5-5': { input: 0.10, cachedInput: 0.10, output: 0.50 }
 };
 
 const LEGACY_RATE_PER_100_PER_MODEL = 0.005;
