@@ -75,7 +75,7 @@ export const MODEL_CATALOG = [
     provider: 'openai',
     family: 'OpenAI',
     description: 'Fast, affordable GPT-4o'
-  }
+  },
 
   // Anthropic / Claude
   { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', provider: 'anthropic', family: 'Anthropic', description: 'Flagship Claude model' },
