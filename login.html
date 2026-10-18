@@ -321,10 +321,6 @@
         with anyone. Your profile and balance are stored separately from
         your sign-in credentials.
       </p>
-
-      <div class="button-row">
-        <a class="secondary" href="index.html">Back to fact-checker</a>
-      </div>
     </section>
   </main>
 
@@ -477,8 +473,6 @@
           );
         }
 
-        // If email confirmation is disabled, a session may be returned
-        // immediately. Save profile details only when signed in.
         if (data.session) {
           await saveProfile(data.user, fullName, dateOfBirth);
 
@@ -540,8 +534,6 @@
           throw new Error("No authenticated account was returned.");
         }
 
-        // On email-confirmation flows, user metadata retains the original
-        // registration details. Sync them into the profile after login.
         const fullName =
           user.user_metadata?.full_name || "";
 
@@ -568,14 +560,12 @@
       }
     });
 
-    // Existing signed-in users can go directly to their account page.
     const { data: sessionData } = await supabase.auth.getSession();
 
     if (sessionData.session) {
       window.location.href = "account.html";
     }
 
-    // Restore the appropriate form if a link contains ?mode=login.
     if (new URLSearchParams(window.location.search).get("mode") === "login") {
       setMode("login");
     }
