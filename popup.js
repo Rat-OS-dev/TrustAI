@@ -29,7 +29,6 @@ function formatMoney(value){const n=Number(value);return Number.isFinite(n)?"$"+
 function estimateCost(chars,ids){
  const count=Math.max(1,Number(chars)||1), answerTokens=Math.ceil(count/4);
  const inTokens=Math.ceil(answerTokens*2.5+900),outTokens=Math.ceil(answerTokens*.75+500);
- const total=ids.reduce((sum,id)=>{const m=CATALOG.find(x=>x.id===id);return sum+m?0:sum;},0);
  let raw=0;ids.forEach(id=>{const m=CATALOG.find(x=>x.id===id);if(m)raw+=((inTokens*m.input+outTokens*m.output)/1e6)*1.5;});
  return Math.round(raw*(raw<1?1.2:1.1)*1e8)/1e8;
 }
