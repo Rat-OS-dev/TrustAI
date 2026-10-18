@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ok:false});
       return;
     }
-    const tab = await chrome.tabs.create({url:SITE_URL});
+    const tab = await chrome.tabs.create({url:SITE_URL+"login.html?mode=login"});
     await chrome.storage.session.set({[HANDOFF_KEY]:{tabId:tab.id,result,session,phase:"session"}});
     sendResponse({ok:true});
   })().catch(() => sendResponse({ok:false}));
@@ -40,7 +40,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         args:[supabaseStorage]
       });
       await chrome.storage.session.set({[HANDOFF_KEY]:{...handoff,phase:"render"}});
-      await chrome.tabs.reload(tabId);
+      await chrome.tabs.update(tabId,{url:SITE_URL+"index.html"});
       return;
     }
     if (handoff.phase === "render") {
