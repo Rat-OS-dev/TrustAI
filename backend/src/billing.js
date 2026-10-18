@@ -44,15 +44,25 @@ function roundUsd(value) {
   return Math.round((value + Number.EPSILON) * 1e8) / 1e8;
 }
 
-// Apply one tiered markup to provider API cost for estimates and final charges:
-// 20% when the raw total API cost is under $1.00; otherwise 10%.
+// Regular Trust AI uses a flat 5% markup over configured provider API cost.
 export function getMarkupPercent(apiCost) {
-  return Math.max(0, Number(apiCost) || 0) < 1 ? 20 : 10;
+  return 5;
 }
 
 export function calculateCustomerPrice(apiCost) {
   const rawCost = Math.max(0, Number(apiCost) || 0);
-  return roundUsd(rawCost * (1 + getMarkupPercent(rawCost) / 100));
+  return roundUsd(rawCost * 1.05);
+}
+
+// Trusty uses 20% markup when the raw message API cost is $0.20 or less,
+// and 10% when the raw API cost exceeds $0.20.
+export function getTrustyMarkupPercent(apiCost) {
+  return Math.max(0, Number(apiCost) || 0) > 0.20 ? 10 : 20;
+}
+
+export function calculateTrustyCustomerPrice(apiCost) {
+  const rawCost = Math.max(0, Number(apiCost) || 0);
+  return roundUsd(rawCost * (1 + getTrustyMarkupPercent(rawCost) / 100));
 }
 
 /**
