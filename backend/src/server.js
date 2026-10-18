@@ -228,6 +228,160 @@ app.patch(
   }
 );
 
+/**
+ * Redeem a promotional code.
+ *
+ * Rules:
+ * - Codes live in the promo_codes table.
+ * - max_per_user = null  → unlimited redemptions for that user
+ * - max_per_user = 1     → only once per user
+ * - Amount is taken from the database (never from the client)
+ * - Client cannot choose how much money to add
+ */
+app.post(
+  '/api/wallet/redeem-promo',
+  requireAuthenticatedUser,
+  async (req, res) => {
+    try {
+      const userId = req.authUser.id;
+      const rawCode = req.body?.code;
+
+      if (typeof rawCode !== 'string' || rawCode.trim().length === 0) {
+        return res.status(400).json({
+          error: 'Please enter a promotional code.'
+        });
+      }
+
+      const code = rawCode.trim();
+
+      if (code.length > 200) {
+        return res.status(400).json({
+          error: 'That promotional code is too long.'
+        });
+      }
+
+      // 1. Look up the code
+      const { data: promo, error: promoError } = await supabaseAdmin
+        .from('promo_codes')
+        .select('code, amount_usd, max_per_user, is_active')
+        .eq('code', code)
+        .maybeSingle();
+
+      if (promoError) {
+        console.error('Promo lookup failed:', promoError.message);
+        return res.status(500).json({
+          error: 'Could not check the promotional code right now.'
+        });
+      }
+
+      if (!promo || !promo.is_active) {
+        return res.status(400).json({
+          error: 'That promotional code is invalid or inactive.'
+        });
+      }
+
+      const amount = Number(promo.amount_usd);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        console.error('Invalid amount configured for promo code:', code);
+        return res.status(500).json({
+          error: 'This promotional code is misconfigured.'
+        });
+      }
+
+      // 2. Check how many times this user has already redeemed this code
+      const { count: previousCount, error: countError } = await supabaseAdmin
+        .from('promo_redemptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('code', code);
+
+      if (countError) {
+        console.error('Promo redemption count failed:', countError.message);
+        return res.status(500).json({
+          error: 'Could not verify previous redemptions.'
+        });
+      }
+
+      const alreadyRedeemed = previousCount || 0;
+
+      // max_per_user = null means unlimited
+      if (
+        promo.max_per_user !== null &&
+        promo.max_per_user !== undefined &&
+        alreadyRedeemed >= promo.max_per_user
+      ) {
+        return res.status(400).json({
+          error: 'You have already redeemed this promotional code the maximum number of times.'
+        });
+      }
+
+      // 3. Credit the wallet
+      const { data: wallet, error: walletError } = await supabaseAdmin
+        .from('wallets')
+        .select('balance_usd')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (walletError || !wallet) {
+        console.error('Wallet lookup failed:', walletError?.message);
+        return res.status(500).json({
+          error: 'Could not load your wallet.'
+        });
+      }
+
+      const currentBalance = Number(wallet.balance_usd) || 0;
+      const newBalance = currentBalance + amount;
+
+      const { error: updateError } = await supabaseAdmin
+        .from('wallets')
+        .update({ balance_usd: newBalance })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Wallet update failed:', updateError.message);
+        return res.status(500).json({
+          error: 'Could not add the promotional credit.'
+        });
+      }
+
+      // 4. Record the redemption (audit log)
+      const { error: logError } = await supabaseAdmin
+        .from('promo_redemptions')
+        .insert({
+          user_id: userId,
+          code: code,
+          amount_usd: amount
+        });
+
+      if (logError) {
+        // Balance was already updated. Log the problem but still return success
+        // so the user is not left thinking the credit failed.
+        console.error(
+          'Failed to log promo redemption (balance was still credited):',
+          logError.message
+        );
+      }
+
+      return res.json({
+        success: true,
+        amount_usd: amount,
+        balance_usd: newBalance,
+        message: `$${amount.toFixed(2)} promotional credit added.`
+      });
+    } catch (error) {
+      console.error(
+        'Promo redemption failed:',
+        error instanceof Error ? error.message : error
+      );
+
+      return res.status(500).json({
+        error: 'Something went wrong while redeeming the code.'
+      });
+    }
+  }
+);
+
 // Existing fact-checking endpoint remains connected.
 app.use('/api/evaluate', evaluateRouter);
 
