@@ -61,9 +61,9 @@ function parseVote(response, voterId) {
   if (typeof parsed?.vote === 'string' && candidateIds.includes(parsed.vote)) return parsed.vote;
   // Recover only an explicitly declared vote if a provider adds prose around it.
   const explicit =
-    raw.match(/(?:i\\s+)?vote\\s+for\\s+[`"' ]?([a-z0-9.-]+)/i) ||
-    raw.match(/["']vote["']\\s*:\\s*["']([^"']+)["']/i) ||
-    raw.match(/(?:selected|choice)(?:\\s+model)?\\s*[:=]\\s*[`"' ]?([a-z0-9.-]+)/i);
+    raw.match(/(?:i\s+)?vote\s+for\s+[`"' ]?([a-z0-9.-]+)/i) ||
+    raw.match(/["']vote["']\s*:\s*["']([^"']+)["']/i) ||
+    raw.match(/(?:selected|choice)(?:\s+model)?\s*[:=]\s*[`"' ]?([a-z0-9.-]+)/i);
   return explicit && candidateIds.includes(explicit[1]) ? explicit[1] : null;
 }
 
