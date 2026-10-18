@@ -132,6 +132,92 @@ async function chargeExactApiCost(userId, cost) {
   return { cost_usd: roundedCost, balance_usd: Number(data.balance_usd) || 0 };
 }
 
+
+function cleanStoredMessages(value) {
+  if (!Array.isArray(value) || value.length > 200) throw new Error('Chat history must contain up to 200 messages.');
+  return value.map((message) => {
+    if (!message || !['user', 'assistant'].includes(message.role) ||
+        typeof message.content !== 'string' || !message.content.trim() ||
+        message.content.length > 8000) throw new Error('A chat message is invalid.');
+    return { role: message.role, content: message.content.trim() };
+  });
+}
+
+router.get('/conversations', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.from('trusty_conversations')
+      .select('id,title,created_at,updated_at').eq('user_id', req.authUser.id)
+      .order('updated_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    return res.json({ conversations: data || [] });
+  } catch (error) {
+    console.error('Trusty history list failed:', error instanceof Error ? error.message : error);
+    return res.status(500).json({ error: 'Could not load your chat history.' });
+  }
+});
+
+router.get('/conversations/:id', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.from('trusty_conversations')
+      .select('id,title,messages,created_at,updated_at')
+      .eq('id', req.params.id).eq('user_id', req.authUser.id).maybeSingle();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'That conversation was not found.' });
+    return res.json({ conversation: data });
+  } catch (error) {
+    console.error('Trusty conversation load failed:', error instanceof Error ? error.message : error);
+    return res.status(500).json({ error: 'Could not open that conversation.' });
+  }
+});
+
+router.post('/conversations', async (req, res) => {
+  let messages;
+  try {
+    messages = cleanStoredMessages(req.body?.messages);
+    if (!messages.length) return res.status(400).json({ error: 'A conversation needs at least one message.' });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+  const firstUserMessage = messages.find((message) => message.role === 'user')?.content || 'New chat';
+  const title = typeof req.body?.title === 'string' && req.body.title.trim()
+    ? req.body.title.trim().slice(0, 100) : firstUserMessage.slice(0, 72);
+  try {
+    const { data, error } = await supabaseAdmin.from('trusty_conversations')
+      .insert({ user_id: req.authUser.id, title, messages })
+      .select('id,title,created_at,updated_at').single();
+    if (error) throw error;
+    return res.status(201).json({ conversation: data });
+  } catch (error) {
+    console.error('Trusty conversation create failed:', error instanceof Error ? error.message : error);
+    return res.status(500).json({ error: 'Could not save this conversation.' });
+  }
+});
+
+router.patch('/conversations/:id', async (req, res) => {
+  let messages;
+  try {
+    messages = cleanStoredMessages(req.body?.messages);
+    if (!messages.length) return res.status(400).json({ error: 'A conversation needs at least one message.' });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+  const firstUserMessage = messages.find((message) => message.role === 'user')?.content || 'New chat';
+  const title = typeof req.body?.title === 'string' && req.body.title.trim()
+    ? req.body.title.trim().slice(0, 100) : firstUserMessage.slice(0, 72);
+  try {
+    const { data, error } = await supabaseAdmin.from('trusty_conversations')
+      .update({ title, messages, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id).eq('user_id', req.authUser.id)
+      .select('id,title,created_at,updated_at').maybeSingle();
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: 'That conversation was not found.' });
+    return res.json({ conversation: data });
+  } catch (error) {
+    console.error('Trusty conversation save failed:', error instanceof Error ? error.message : error);
+    return res.status(500).json({ error: 'Could not save this conversation.' });
+  }
+});
+
 router.post('/chat', async (req, res) => {
   const userId = req.authUser?.id;
   if (!userId) return res.status(401).json({ error: 'Please sign in to use Trusty.' });
