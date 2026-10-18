@@ -253,7 +253,7 @@
       return Math.round(total * 100000000) / 100000000;
     }
     function formatCost(cost) {
-      return "$" + Number(cost || 0).toFixed(6).replace(/0+$/, "").replace(/\.$/, ".00");
+      return "$" + Number(cost || 0).toFixed(8).replace(/0+$/, "").replace(/\.$/, ".00");
     }
 
     const answerInput = document.getElementById("answerInput");
