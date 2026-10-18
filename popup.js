@@ -56,7 +56,7 @@ function renderWeights(){
  [...selected].forEach(id=>{const m=CATALOG.find(x=>x.id===id);if(!m)return;const row=document.createElement("div");row.className="weight-row";const top=document.createElement("div");top.className="weight-top";const name=document.createElement("span");name.textContent=m.name;const value=document.createElement("strong");value.textContent=(weights[id]||0)+"%";top.append(name,value);const slider=document.createElement("input");slider.type="range";slider.min=String(MIN_WEIGHT);slider.max=String(100-(selected.size-1)*MIN_WEIGHT);slider.step="1";slider.value=String(Math.max(MIN_WEIGHT,Number(weights[id])||MIN_WEIGHT));slider.setAttribute("aria-label",m.name+" weight");slider.addEventListener("input",()=>{weights[id]=Number(slider.value);value.textContent=weights[id]+"%";updateTotal();});row.append(top,slider);$("weightsList").append(row);});
  updateTotal();
 }
-function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));if(id==="accountView")loadAccount().catch(()=>{});}
+function showView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",(b.dataset.view===id||(b.dataset.view==="modelsView"&&id==="checkView")) ));if(id==="accountView")loadAccount().catch(()=>{});}
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 $("changeModels").addEventListener("click",()=>showView("modelsView"));
 $("modelSearch").addEventListener("input",renderModels);
