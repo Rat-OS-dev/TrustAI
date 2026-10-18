@@ -292,14 +292,6 @@
 
         <button
           class="secondary-button"
-          id="refreshButton"
-          type="button"
-        >
-          Refresh account
-        </button>
-
-        <button
-          class="secondary-button"
           id="logoutButton"
           type="button"
         >
@@ -335,7 +327,6 @@
     );
 
     const message = document.getElementById("accountMessage");
-    const refreshButton = document.getElementById("refreshButton");
     const logoutButton = document.getElementById("logoutButton");
 
     function showMessage(text, type = "") {
@@ -381,7 +372,6 @@
     }
 
     async function loadAccount() {
-      refreshButton.disabled = true;
       showMessage("");
 
       document.getElementById("headingName").textContent =
@@ -489,12 +479,8 @@
             : "Could not load your account. Please try again.",
           "error"
         );
-      } finally {
-        refreshButton.disabled = false;
       }
     }
-
-    refreshButton.addEventListener("click", loadAccount);
 
     logoutButton.addEventListener("click", async () => {
       logoutButton.disabled = true;
