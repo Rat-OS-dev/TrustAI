@@ -2,6 +2,11 @@ name: Build Trust AI Desktop
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "desktop/**"
+      - "package.json"
+      - ".github/workflows/desktop-release.yml"
   push:
     tags:
       - "desktop-v*"
@@ -29,7 +34,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install desktop dependencies
         run: npm install
@@ -51,7 +55,7 @@ jobs:
           retention-days: 30
 
   publish-release:
-    name: Publish downloadable release
+    name: Prepare downloadable release
     if: startsWith(github.ref, 'refs/tags/desktop-v')
     needs: build
     runs-on: ubuntu-latest
@@ -62,7 +66,7 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Publish GitHub Release
+      - name: Create draft GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Trust AI Desktop ${{ github.ref_name }}
