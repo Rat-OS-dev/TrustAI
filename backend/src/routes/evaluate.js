@@ -10,7 +10,7 @@ import {
   calculateEvidenceScore
 } from '../scoring/trustScore.js';
 
-import { calculateInputCost } from '../billing.js';
+import { estimateRequestCost, calculateUsageCost } from '../billing.js';
 import {
   MODEL_BY_ID,
   MIN_MODELS,
@@ -227,12 +227,10 @@ function validateRequest(answer, models, weights) {
   return null;
 }
 
-async function chargeUserForInput(userId, characterCount, modelCount) {
+async function chargeUserForCost(userId, cost) {
   if (!supabaseAdmin) {
     throw new Error('Billing is not configured on the server.');
   }
-
-  const cost = calculateInputCost(characterCount, modelCount);
 
   const { data: wallet, error: walletError } = await supabaseAdmin
     .from('wallets')
@@ -245,18 +243,19 @@ async function chargeUserForInput(userId, characterCount, modelCount) {
   }
 
   const currentBalance = Number(wallet.balance_usd) || 0;
+  const roundedCost = Math.round(cost * 1e8) / 1e8;
 
-  if (currentBalance < cost) {
+  if (currentBalance + 1e-10 < roundedCost) {
     const err = new Error(
-      `Please add funds. This fact-check costs $${cost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`
+      `Please add funds. This fact-check costs $${roundedCost.toFixed(8)}. Your balance is $${currentBalance.toFixed(8)}.`
     );
     err.statusCode = 402;
-    err.cost = cost;
+    err.cost = roundedCost;
     err.balance_usd = currentBalance;
     throw err;
   }
 
-  const newBalance = Math.round((currentBalance - cost) * 10000) / 10000;
+  const newBalance = Math.round((currentBalance - roundedCost) * 1e8) / 1e8;
 
   const { error: updateError } = await supabaseAdmin
     .from('wallets')
@@ -269,7 +268,7 @@ async function chargeUserForInput(userId, characterCount, modelCount) {
 
   return {
     charged: true,
-    cost_usd: cost,
+    cost_usd: roundedCost,
     balance_usd: newBalance
   };
 }
@@ -305,7 +304,7 @@ router.post('/', async (req, res) => {
 
   const inputLength = answer.trim().length;
   const modelCount = models.length;
-  const estimatedCost = calculateInputCost(inputLength, modelCount);
+  const estimatedCost = estimateRequestCost(inputLength, models);
 
   try {
     if (supabaseAdmin) {
@@ -353,6 +352,14 @@ router.post('/', async (req, res) => {
           queryProvider
         );
 
+        const usage = queryProvider.getUsage();
+
+        if (!usage || !usage.complete || usage.requests === 0) {
+          throw new Error(
+            `${meta.name} did not report complete token usage, so its API cost cannot be calculated safely.`
+          );
+        }
+
         return [
           modelId,
           {
@@ -362,13 +369,26 @@ router.post('/', async (req, res) => {
             trustScore: evaluationScores.trustScore,
             confidenceScore: evaluationScores.confidenceScore,
             evidenceScore,
-            evidence
+            evidence,
+            usage
           }
         ];
       })
     );
 
-    const providerResults = Object.fromEntries(providerEntries);
+    const providerResultsWithUsage = Object.fromEntries(providerEntries);
+    const usageByModel = Object.fromEntries(
+      models.map((id) => [id, providerResultsWithUsage[id].usage])
+    );
+    const { cost_usd: actualCost, model_costs_usd: modelCosts } =
+      calculateUsageCost(usageByModel);
+
+    const providerResults = Object.fromEntries(
+      models.map((id) => {
+        const { usage, ...publicResult } = providerResultsWithUsage[id];
+        return [id, publicResult];
+      })
+    );
 
     const trustScore = getNonNeutralTrustScore(
       models,
@@ -376,17 +396,24 @@ router.post('/', async (req, res) => {
       providerResults
     );
 
-    let billing = {
-      charged: false,
-      cost_usd: estimatedCost,
-      balance_usd: null,
-      model_count: modelCount
-    };
-
+    let billing;
     try {
       billing = {
-        ...(await chargeUserForInput(userId, inputLength, modelCount)),
-        model_count: modelCount
+        ...(await chargeUserForCost(userId, actualCost)),
+        model_count: modelCount,
+        pricing_basis: 'provider_reported_tokens',
+        model_costs_usd: modelCosts,
+        usage_by_model: Object.fromEntries(
+          models.map((id) => {
+            const usage = usageByModel[id];
+            return [id, {
+              input_tokens: usage.input_tokens,
+              cached_input_tokens: usage.cached_input_tokens,
+              output_tokens: usage.output_tokens,
+              requests: usage.requests
+            }];
+          })
+        )
       };
     } catch (chargeError) {
       console.error(
@@ -401,6 +428,8 @@ router.post('/', async (req, res) => {
           balance_usd: chargeError.balance_usd
         });
       }
+
+      throw chargeError;
     }
 
     const responseData = buildEvaluationResponse({
@@ -413,7 +442,10 @@ router.post('/', async (req, res) => {
       cost_usd: billing.cost_usd,
       balance_usd: billing.balance_usd,
       charged: billing.charged,
-      model_count: modelCount
+      model_count: modelCount,
+      pricing_basis: billing.pricing_basis,
+      model_costs_usd: billing.model_costs_usd,
+      usage_by_model: billing.usage_by_model
     };
 
     return res.status(200).json(responseData);

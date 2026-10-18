@@ -37,15 +37,26 @@
     .search-row { margin: 12px 0; }
     .model-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-top: 10px; }
     .model-option {
-      display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
       border: 1px solid var(--border); border-radius: 8px; background: #0b1222; cursor: pointer;
     }
     .model-option:hover { border-color: var(--accent); }
     .model-option.selected { border-color: var(--green); background: #0f1f1a; }
-    .model-option input { margin-top: 3px; }
-    .model-meta { flex: 1; }
+    .model-option input { margin: 0; flex: 0 0 auto; }
+    .model-meta { flex: 1; min-width: 0; }
     .model-name { font-weight: bold; }
     .model-desc { font-size: 0.85rem; color: var(--muted); }
+    .model-price {
+      flex: 0 0 auto; margin-left: auto; padding: 4px 9px; border-radius: 999px;
+      border: 1px solid var(--border); font-size: 0.76rem; font-weight: bold;
+      line-height: 1.4; white-space: nowrap;
+    }
+    .model-price.cheap { color: #73e6b4; border-color: #28684f; background: #10251e; }
+    .model-price.average { color: #ffd27a; border-color: #735a27; background: #2a2314; }
+    @media (max-width: 440px) {
+      .model-option { gap: 7px; padding: 9px; }
+      .model-price { padding: 3px 6px; font-size: 0.7rem; }
+    }
     .selected-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .chip {
       display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
@@ -114,7 +125,7 @@
     <section id="reviewPage" class="page active">
       <div class="panel">
         <h2>Fact-check Anything</h2>
-        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. Pricing is $0.005 per model per 100 characters (minimum $0.01 total).</p>
+        <p class="description">Pick at least 2 models (up to 10), set weights, then submit text. The preview is a rough estimate. Final charges use each provider's reported token usage and the selected models' API rates.</p>
 
         <form id="reviewForm" novalidate>
           <label for="answerInput">Text to Fact-check</label>
@@ -123,7 +134,7 @@
           <p id="costPreview">Estimated cost: $0.01</p>
 
           <h3>Models</h3>
-          <p class="description">Search and select models. Minimum 2, maximum 10.</p>
+          <p class="description">Search and select models. The price label on the right shows each model's typical relative API cost, not a fixed charge. Minimum 2, maximum 10.</p>
           <div class="search-row">
             <input type="search" id="modelSearch" placeholder="Search models (e.g. Grok, GPT-5, mini)..." autocomplete="off" />
           </div>
@@ -175,16 +186,16 @@
     const BACKEND_URL = "https://trustai-backend-93qs.onrender.com";
 
     const MODEL_CATALOG = [
-      { id: "grok-4.7", name: "Grok 4.7", family: "xAI", description: "Flagship Grok model" },
-      { id: "grok-4.6", name: "Grok 4.6", family: "xAI", description: "Previous flagship Grok" },
-      { id: "grok-4.5", name: "Grok 4.5", family: "xAI", description: "Strong general Grok model" },
-      { id: "grok-4.3", name: "Grok 4.3", family: "xAI", description: "Long-context Grok model" },
-      { id: "grok-4-1-fast-reasoning", name: "Grok 4 Fast", family: "xAI", description: "Fast, lower-cost Grok" },
-      { id: "gpt-5", name: "GPT-5", family: "OpenAI", description: "Flagship GPT-5" },
-      { id: "gpt-5-mini", name: "GPT-5 mini", family: "OpenAI", description: "Faster, cheaper GPT-5" },
-      { id: "gpt-5-nano", name: "GPT-5 nano", family: "OpenAI", description: "Smallest GPT-5 tier" },
-      { id: "gpt-4.1", name: "GPT-4.1", family: "OpenAI", description: "Strong GPT-4.1 model" },
-      { id: "gpt-4o-mini", name: "GPT-4o mini", family: "OpenAI", description: "Fast, affordable GPT-4o" }
+      { id: "grok-4.7", name: "Grok 4.7", family: "xAI", description: "Flagship Grok model", priceTier: "average" },
+      { id: "grok-4.6", name: "Grok 4.6", family: "xAI", description: "Previous flagship Grok", priceTier: "average" },
+      { id: "grok-4.5", name: "Grok 4.5", family: "xAI", description: "Strong general Grok model", priceTier: "average" },
+      { id: "grok-4.3", name: "Grok 4.3", family: "xAI", description: "Long-context Grok model", priceTier: "average" },
+      { id: "grok-4-1-fast-reasoning", name: "Grok 4 Fast", family: "xAI", description: "Fast, lower-cost Grok", priceTier: "average" },
+      { id: "gpt-5", name: "GPT-5", family: "OpenAI", description: "Flagship GPT-5", priceTier: "average" },
+      { id: "gpt-5-mini", name: "GPT-5 mini", family: "OpenAI", description: "Faster, cheaper GPT-5", priceTier: "average" },
+      { id: "gpt-5-nano", name: "GPT-5 nano", family: "OpenAI", description: "Smallest GPT-5 tier", priceTier: "cheap" },
+      { id: "gpt-4.1", name: "GPT-4.1", family: "OpenAI", description: "Strong GPT-4.1 model", priceTier: "average" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", family: "OpenAI", description: "Fast, affordable GPT-4o", priceTier: "cheap" }
     ];
 
     const MIN_MODELS = 2;
@@ -222,14 +233,41 @@
       });
     });
 
-    function calculateInputCost(charCount, modelCount) {
-      const n = Math.max(1, modelCount || 1);
-      const count = Math.max(0, charCount || 0);
-      const perModel = Math.max(0.005, (count / 100) * 0.005);
-      return Math.round(perModel * n * 10000) / 10000;
+    const MODEL_RATES = {
+      "grok-4.7": { input: 2.00, output: 6.00 },
+      "grok-4.6": { input: 2.00, output: 6.00 },
+      "grok-4.5": { input: 2.00, output: 6.00 },
+      "grok-4.3": { input: 1.25, output: 2.50 },
+      "grok-4-1-fast-reasoning": { input: 1.25, output: 2.50 },
+      "grok-4.20-0309-reasoning": { input: 1.25, output: 2.50 },
+      "grok-4.20-0309-non-reasoning": { input: 1.25, output: 2.50 },
+      "grok-4.20-multi-agent-0309": { input: 1.25, output: 2.50 },
+      "gpt-5": { input: 1.25, output: 10.00 },
+      "gpt-5-mini": { input: 0.25, output: 2.00 },
+      "gpt-5-nano": { input: 0.05, output: 0.40 },
+      "gpt-4.1": { input: 2.00, output: 8.00 },
+      "gpt-4o-mini": { input: 0.15, output: 0.60 }
+    };
+
+    function calculateInputCost(charCount, modelIds) {
+      const count = Math.max(1, Number(charCount) || 1);
+      const answerTokens = Math.ceil(count / 4);
+      const estimatedInputTokens = Math.ceil(answerTokens * 2.5 + 900);
+      const estimatedOutputTokens = Math.ceil(answerTokens * 0.75 + 500);
+      const ids = Array.isArray(modelIds) ? modelIds : [];
+      const safetyMultiplier = 1.5;
+      const total = ids.reduce((sum, id) => {
+        const rates = MODEL_RATES[id];
+        if (!rates) return sum;
+        return sum + (
+          (estimatedInputTokens * rates.input + estimatedOutputTokens * rates.output) /
+          1000000
+        ) * safetyMultiplier;
+      }, 0);
+      return Math.round(total * 100000000) / 100000000;
     }
     function formatCost(cost) {
-      return "$" + cost.toFixed(4).replace(/0+$/, "").replace(/\.$/, ".00");
+      return "$" + Number(cost || 0).toFixed(8).replace(/0+$/, "").replace(/\.$/, ".00");
     }
 
     const answerInput = document.getElementById("answerInput");
@@ -248,7 +286,8 @@
 
     function updateCostPreview() {
       const len = answerInput.value.trim().length;
-      const cost = calculateInputCost(len || 1, Math.max(selected.size, MIN_MODELS));
+      const estimateModels = [...selected];
+      const cost = calculateInputCost(len || 1, estimateModels);
       const n = selected.size;
       costPreview.textContent =
         "Estimated cost: " + formatCost(cost) +
@@ -371,7 +410,10 @@
           '<div class="model-meta">' +
             '<div class="model-name">' + m.name + ' <span class="weight-note">(' + m.family + ')</span></div>' +
             '<div class="model-desc">' + m.description + '</div>' +
-          '</div>';
+          '</div>' +
+          '<span class="model-price ' + m.priceTier + '" title="Typical relative API cost per Trust AI check; actual charges depend on token usage">' +
+            m.priceTier.charAt(0).toUpperCase() + m.priceTier.slice(1) +
+          '</span>';
         const box = row.querySelector("input");
         box.addEventListener("change", () => {
           if (box.checked) {
@@ -477,7 +519,16 @@
 
         let successMsg = "Fact-check complete. View Trust Score and Evidence.";
         if (data.billing && typeof data.billing.cost_usd === "number") {
-          successMsg += " Charged " + formatCost(data.billing.cost_usd) + ".";
+          successMsg += " Usage-based charge: " + formatCost(data.billing.cost_usd) + ".";
+          if (data.billing.model_costs_usd && typeof data.billing.model_costs_usd === "object") {
+            const breakdown = Object.entries(data.billing.model_costs_usd)
+              .map(([id, cost]) => {
+                const meta = MODEL_CATALOG.find(model => model.id === id);
+                return (meta ? meta.name : id) + " " + formatCost(cost);
+              })
+              .join(", ");
+            if (breakdown) successMsg += " By model: " + breakdown + ".";
+          }
           if (typeof data.billing.balance_usd === "number") {
             successMsg += " New balance: " + formatCost(data.billing.balance_usd) + ".";
           }
