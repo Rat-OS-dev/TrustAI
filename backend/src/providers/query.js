@@ -86,47 +86,81 @@ async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutp
     throw new Error('OPENAI_API_KEY is not configured.');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: modelId,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ],
-      ...(Number.isInteger(maxOutputTokens) ? { max_completion_tokens: maxOutputTokens } : {})
-    })
-  });
+  // GPT-5 can spend completion tokens on internal reasoning. A tiny output
+  // budget (especially for a vote) can therefore produce no visible answer.
+  // Keep reasoning effort low and retry once with a larger budget if needed.
+  const initialBudget = Number.isInteger(maxOutputTokens) ? maxOutputTokens : undefined;
+  let totalUsage = null;
 
-  const responseText = await response.text();
-  let data;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const budget = attempt === 0
+      ? initialBudget
+      : Math.max(1600, (initialBudget || 1200) * 2);
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        reasoning_effort: 'low',
+        ...(Number.isInteger(budget) ? { max_completion_tokens: budget } : {})
+      })
+    });
 
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    data = null;
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const detail = data?.error?.message || responseText || 'No error details returned.';
+      console.error(`OpenAI API error for ${modelId} (${response.status}): ${detail}`);
+      throw new Error(`OpenAI API request failed for ${modelId} (${response.status}).`);
+    }
+
+    const usage = data?.usage;
+    if (usage) {
+      if (!totalUsage) {
+        totalUsage = { ...usage };
+      } else {
+        for (const key of ['prompt_tokens', 'completion_tokens', 'total_tokens']) {
+          if (Number.isFinite(Number(usage[key]))) {
+            totalUsage[key] = (Number(totalUsage[key]) || 0) + Number(usage[key]);
+          }
+        }
+        const currentDetails = usage.prompt_tokens_details || {};
+        const previousDetails = totalUsage.prompt_tokens_details || {};
+        totalUsage.prompt_tokens_details = {
+          ...previousDetails,
+          cached_tokens: (Number(previousDetails.cached_tokens) || 0) +
+            (Number(currentDetails.cached_tokens) || 0)
+        };
+      }
+    }
+
+    const result = data?.choices?.[0]?.message?.content;
+    if (typeof result === 'string' && result.trim()) {
+      return { result, usage: totalUsage || usage };
+    }
+
+    const finishReason = data?.choices?.[0]?.finish_reason || 'unknown';
+    console.warn(`OpenAI API returned no visible text for ${modelId} (attempt ${attempt + 1}, finish_reason=${finishReason}).`);
+    if (attempt === 1) {
+      throw new Error(`${modelId} returned an empty response after retry (finish_reason=${finishReason}).`);
+    }
   }
 
-  if (!response.ok) {
-    const detail =
-      data?.error?.message || responseText || 'No error details returned.';
-    console.error(`OpenAI API error for ${modelId} (${response.status}): ${detail}`);
-    throw new Error(`OpenAI API request failed for ${modelId} (${response.status}).`);
-  }
-
-  const result = data?.choices?.[0]?.message?.content;
-
-  if (typeof result !== 'string' || !result.trim()) {
-    throw new Error(`${modelId} returned an empty response.`);
-  }
-
-  return { result, usage: data?.usage };
+  throw new Error(`${modelId} returned an empty response.`);
 }
-
 
 async function callAnthropic(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutputTokens) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
