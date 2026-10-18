@@ -41,7 +41,7 @@ function addUsage(total, usage) {
   total.requests += 1;
 }
 
-async function callXai(modelId, prompt) {
+async function callXai(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutputTokens) {
   const apiKey = process.env.XAI_API_KEY;
 
   if (!apiKey) {
@@ -57,10 +57,11 @@ async function callXai(modelId, prompt) {
     body: JSON.stringify({
       model: modelId,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
       ],
-      temperature: 0
+      temperature: 0,
+      ...(Number.isInteger(maxOutputTokens) ? { max_tokens: maxOutputTokens } : {})
     })
   });
 
@@ -78,7 +79,7 @@ async function callXai(modelId, prompt) {
   return { result, usage: data.usage };
 }
 
-async function callOpenAI(modelId, prompt) {
+async function callOpenAI(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutputTokens) {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
@@ -94,9 +95,10 @@ async function callOpenAI(modelId, prompt) {
     body: JSON.stringify({
       model: modelId,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-      ]
+      ],
+      ...(Number.isInteger(maxOutputTokens) ? { max_tokens: maxOutputTokens } : {})
     })
   });
 
@@ -126,7 +128,7 @@ async function callOpenAI(modelId, prompt) {
 }
 
 
-async function callAnthropic(modelId, prompt) {
+async function callAnthropic(modelId, prompt, systemPrompt = SYSTEM_PROMPT, maxOutputTokens) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not configured.');
@@ -141,8 +143,8 @@ async function callAnthropic(modelId, prompt) {
     },
     body: JSON.stringify({
       model: modelId,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
+      max_tokens: Number.isInteger(maxOutputTokens) ? maxOutputTokens : 4096,
+      system: systemPrompt,
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -182,15 +184,21 @@ export function makeQueryFunction(modelId) {
     complete: true
   };
 
-  async function queryModel(prompt) {
+  async function queryModel(prompt, options = {}) {
     let response;
+    const systemPrompt = typeof options.systemPrompt === 'string' && options.systemPrompt.trim()
+      ? options.systemPrompt.trim()
+      : SYSTEM_PROMPT;
+    const maxOutputTokens = Number.isInteger(options.maxOutputTokens) && options.maxOutputTokens > 0
+      ? options.maxOutputTokens
+      : undefined;
 
     if (model.provider === 'xai') {
-      response = await callXai(model.id, prompt);
+      response = await callXai(model.id, prompt, systemPrompt, maxOutputTokens);
     } else if (model.provider === 'openai') {
-      response = await callOpenAI(model.id, prompt);
+      response = await callOpenAI(model.id, prompt, systemPrompt, maxOutputTokens);
     } else if (model.provider === 'anthropic') {
-      response = await callAnthropic(model.id, prompt);
+      response = await callAnthropic(model.id, prompt, systemPrompt, maxOutputTokens);
     } else {
       throw new Error(`Unsupported provider: ${model.provider}`);
     }
