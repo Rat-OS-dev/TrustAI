@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import evaluateRouter from './routes/evaluate.js';
+import trustyRouter from './routes/trusty.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -359,6 +360,7 @@ app.post(
 );
 
 app.use('/api/evaluate', requireAuthenticatedUser, evaluateRouter);
+app.use('/api/trusty', requireAuthenticatedUser, trustyRouter);
 
 app.listen(PORT, () => {
   console.log(`Trust AI backend running on port ${PORT}`);
