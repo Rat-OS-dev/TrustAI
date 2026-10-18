@@ -77,8 +77,35 @@ export function calculateUsageCost(usageByModel) {
 }
 
 /**
- * Temporary rough preflight estimate used before the APIs are called.
- * The final charge must use calculateUsageCost() and provider-reported usage.
+ * Preflight estimate for the three-stage evaluation pipeline. This estimate is
+ * deliberately separate from final billing: final charges use provider usage.
+ * It includes a safety multiplier because claim/evidence output length varies.
+ */
+export function estimateRequestCost(characterCount, modelIds = []) {
+  const chars = Math.max(1, Number(characterCount) || 1);
+  const estimatedAnswerTokens = Math.ceil(chars / 4);
+  const estimatedInputTokens = Math.ceil(estimatedAnswerTokens * 2.5 + 900);
+  const estimatedOutputTokens = Math.ceil(estimatedAnswerTokens * 0.75 + 500);
+  const safetyMultiplier = 1.5;
+
+  const total = modelIds.reduce((sum, modelId) => {
+    const rates = MODEL_RATES[modelId];
+    if (!rates) {
+      throw new Error(`No API billing rates configured for model: ${modelId}`);
+    }
+
+    const estimatedModelCost =
+      (estimatedInputTokens * rates.input +
+        estimatedOutputTokens * rates.output) /
+      1_000_000;
+    return sum + estimatedModelCost * safetyMultiplier;
+  }, 0);
+
+  return roundUsd(total);
+}
+
+/**
+ * Legacy rough estimate retained for compatibility with older callers.
  */
 export function calculateCostPerModel(characterCount) {
   const count = Number(characterCount);
