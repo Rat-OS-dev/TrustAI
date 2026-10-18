@@ -76,6 +76,13 @@ export const MODEL_CATALOG = [
     family: 'OpenAI',
     description: 'Fast, affordable GPT-4o'
   }
+
+  // Anthropic / Claude
+  { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', provider: 'anthropic', family: 'Anthropic', description: 'Flagship Claude model' },
+  { id: 'claude-opus-5', name: 'Claude Opus 5', provider: 'anthropic', family: 'Anthropic', description: 'Advanced reasoning model' },
+  { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', provider: 'anthropic', family: 'Anthropic', description: 'Balanced high-performance model' },
+  { id: 'claude-sonnet-5', name: 'Claude Sonnet 5', provider: 'anthropic', family: 'Anthropic', description: 'Previous Sonnet generation' },
+  { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5', provider: 'anthropic', family: 'Anthropic', description: 'Fast, lower-cost Claude model' },
 ];
 
 export const MODEL_BY_ID = Object.fromEntries(
@@ -83,7 +90,7 @@ export const MODEL_BY_ID = Object.fromEntries(
 );
 
 export const MIN_MODELS = 2;
-export const MAX_MODELS = MODEL_CATALOG.length;
+export const MAX_MODELS = 10;
 
 export function getModelOrThrow(id) {
   const model = MODEL_BY_ID[id];
