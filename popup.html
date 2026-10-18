@@ -5,47 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trust AI</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1220;
+      --panel: #151f30;
+      --panel-soft: #101a2a;
+      --border: #2b394e;
+      --text: #f4f7fc;
+      --muted: #a8b6c9;
+      --mint: #66e0b7;
+      --mint-dark: #153b35;
+    }
     * { box-sizing: border-box; }
-    html, body {
-      width: 420px;
-      height: 600px;
+    body {
+      width: 360px;
+      min-height: 500px;
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #0b1020;
-      color: #f3f6ff;
-      font: 13px/1.4 Arial, sans-serif;
+      padding: 18px;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.5 Arial, Helvetica, sans-serif;
     }
-    iframe {
-      display: block;
-      width: 100%;
-      height: 564px;
-      border: 0;
-      background: #0b1020;
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .logo {
+      width: 46px; height: 46px; display: grid; place-items: center;
+      border: 1px solid #286657; border-radius: 14px; background: var(--mint-dark);
+      color: var(--mint); flex: 0 0 auto;
     }
-    .toolbar {
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid #2c3954;
-      background: #10182b;
+    .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.4px; }
+    .subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .status {
+      margin-left: auto; padding: 4px 8px; border: 1px solid #28684f;
+      border-radius: 999px; color: var(--mint); background: #10251e;
+      font-size: 10px; font-weight: 700; letter-spacing: .5px;
     }
-    .toolbar a { color: #9bb2ff; text-decoration: none; }
-    .toolbar a:hover { text-decoration: underline; }
+    .rule { height: 1px; background: var(--border); margin: 0 0 18px; }
+    h2 { margin: 0 0 5px; font-size: 16px; }
+    .description { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+    .text-label { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-weight: 700; }
+    .text-card {
+      padding: 11px; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--panel); margin-bottom: 12px;
+    }
+    textarea {
+      display: block; width: 100%; min-height: 145px; resize: vertical;
+      padding: 0; border: 0; outline: 0; background: transparent;
+      color: var(--text); font: 12px/1.6 Arial, Helvetica, sans-serif;
+    }
+    textarea::placeholder { color: #8190a6; }
+    .small-action {
+      width: 100%; padding: 9px 10px; border: 1px solid var(--border);
+      border-radius: 9px; background: #182538; color: #dbe5f2;
+      font-weight: 700; cursor: pointer;
+    }
+    .small-action:hover { border-color: #56718e; background: #1c2b40; }
+    .primary {
+      display: flex; justify-content: center; align-items: center; gap: 9px;
+      width: 100%; margin-top: 12px; padding: 12px;
+      border: 0; border-radius: 10px; background: var(--mint);
+      color: #092019; font-weight: 800; font-size: 13px; cursor: pointer;
+    }
+    .primary:hover { background: #83edca; }
+    .primary:disabled { opacity: .45; cursor: not-allowed; }
+    .hint { margin: 10px 2px 0; color: var(--muted); font-size: 11px; text-align: center; }
+    .message { min-height: 18px; margin: 10px 2px 0; color: var(--mint); font-size: 11px; text-align: center; }
+    .footer { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); color: #8796ab; font-size: 11px; }
+    button:focus-visible, textarea:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
   </style>
 </head>
 <body>
-  <iframe
-    title="Trust AI website"
-    src="https://rat-os-dev.github.io/TrustAI/"
-    allow="clipboard-read; clipboard-write"
-    referrerpolicy="strict-origin-when-cross-origin">
-  </iframe>
-  <div class="toolbar">
-    <a href="https://rat-os-dev.github.io/TrustAI/" target="_blank" rel="noopener noreferrer">
-      If the popup does not load, open Trust AI in a tab
-    </a>
-  </div>
+  <header class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"></path>
+        <path d="m8.5 12 2.2 2.2 4.8-5"></path>
+      </svg>
+    </div>
+    <div>
+      <h1>Trust AI</h1>
+      <div class="subtitle">AI Answer Checker</div>
+    </div>
+    <span class="status">READY</span>
+  </header>
+
+  <div class="rule"></div>
+
+  <main>
+    <h2>Review selected answer</h2>
+    <p class="description">Highlight an AI answer on the page, then load it here. You can also paste text below.</p>
+
+    <label class="text-label" for="answerText">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#66e0b7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h10"></path>
+      </svg>
+      Selected text
+    </label>
+
+    <div class="text-card">
+      <textarea id="answerText" maxlength="12000" placeholder="Your highlighted answer will appear here…"></textarea>
+    </div>
+
+    <button type="button" class="small-action" id="loadSelection">Load highlighted text</button>
+    <button type="button" class="primary" id="checkAnswer">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 12.5 11 14.5 15.5 9.5"></path><circle cx="12" cy="12" r="9"></circle>
+      </svg>
+      Copy &amp; Open Trust AI
+    </button>
+    <p class="hint">Review the text first. It will be copied so you can paste it into the checker.</p>
+    <p class="message" id="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <footer class="footer">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"></path>
+    </svg>
+    Review first · Check when ready
+  </footer>
+  <script src="popup.js"></script>
 </body>
 </html>
