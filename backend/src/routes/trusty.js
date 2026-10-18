@@ -135,7 +135,11 @@ router.post('/chat', async (req, res) => {
     const drafts = await Promise.all(MODEL_SET.map(async (model) => {
       const result = await queries[model.id](
         'You are one of six models powering Trusty, a multi-model assistant. Answer the user helpfully, accurately, and clearly. Use the previous conversation for context. Do not mention internal voting or other models. If uncertain, say so.\n\nConversation:\n' +
-        chatTranscript + '\n\nWrite your best answer to the latest user message: ' + latestQuestion
+        chatTranscript + '\n\nWrite your best answer to the latest user message: ' + latestQuestion,
+        {
+          systemPrompt: 'You are a helpful, accurate, general-purpose AI assistant. Answer directly and naturally. If uncertain, be transparent.',
+          maxOutputTokens: 1200
+        }
       );
       return { ...model, response: result };
     }));
@@ -147,7 +151,11 @@ router.post('/chat', async (req, res) => {
       const voteText = await queries[voter.id](
         'You are voting for which OTHER model should synthesize one final answer from six drafts. Evaluate clarity, correctness, completeness, and ability to reconcile disagreement. You MUST NOT vote for yourself. Your own model ID is ' + voter.id + '. Choose exactly one ID from the eligible list and return only JSON: {"vote":"model-id"}.\nEligible model IDs: ' +
         MODEL_SET.filter((m) => m.id !== voter.id).map((m) => m.id).join(', ') +
-        '\n\nUser question: ' + latestQuestion + '\n\nDrafts:\n' + draftBlock
+        '\n\nUser question: ' + latestQuestion + '\n\nDrafts:\n' + draftBlock,
+        {
+          systemPrompt: 'You are an impartial model-selection judge. Follow the voting rules exactly and return the required JSON.',
+          maxOutputTokens: 100
+        }
       );
       const vote = parseVote(voteText, voter.id);
       if (!vote) throw new Error(`The vote from ${voter.name} was not valid.`);
@@ -162,7 +170,11 @@ router.post('/chat', async (req, res) => {
     // Stage 3: the winning model combines the useful parts of all six drafts.
     const finalAnswer = await queries[winnerId](
       'You are Trusty, the final synthesizer selected by a vote among six AI models. Produce one polished, direct answer to the user. Combine the strongest useful information from all six drafts, reconcile contradictions, remove repetition, and do not claim consensus when drafts disagree. Do not mention this internal process unless the user asks. Preserve useful caveats.\n\nConversation context:\n' +
-      chatTranscript + '\n\nLatest user question:\n' + latestQuestion + '\n\nSix drafts to synthesize:\n' + draftBlock
+      chatTranscript + '\n\nLatest user question:\n' + latestQuestion + '\n\nSix drafts to synthesize:\n' + draftBlock,
+      {
+        systemPrompt: 'You are Trusty, a helpful general-purpose AI assistant. Synthesize the best parts of all supplied drafts into one polished answer.',
+        maxOutputTokens: 2000
+      }
     );
 
     // Bill only provider-reported token usage, at configured API rates, with no markup.
