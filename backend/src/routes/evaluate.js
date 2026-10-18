@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createClient } from '@supabase/supabase-js';
 
 import { queryGrok } from '../providers/xai.js';
 import { queryOpenAI } from '../providers/openai.js';
@@ -12,6 +13,8 @@ import {
   calculateEvidenceScore
 } from '../scoring/trustScore.js';
 
+import { calculateInputCost } from '../billing.js';
+
 const router = Router();
 
 const PROVIDERS = ['grok', 'openai'];
@@ -21,9 +24,19 @@ const queryFunctions = {
   openai: queryOpenAI
 };
 
-// Obtain two distinct scores after evaluating the evidence:
-// 1. Trust Score: estimated factual reliability of the submitted text.
-// 2. Evaluator Confidence: confidence in the quality of this evaluation.
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+
+const supabaseAdmin =
+  SUPABASE_URL && SUPABASE_SECRET_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    : null;
+
 async function getEvaluatorScores(answer, evidence, queryProvider) {
   const prompt = `
 You are evaluating the factual reliability of submitted text.
@@ -115,11 +128,6 @@ Do not include markdown or any text outside the JSON object.
   };
 }
 
-// Prevent the displayed combined Trust Score from being exactly 50.
-// If the weighted result is already directional, preserve its direction.
-// If the result is exactly tied, use the evidence direction and then
-// evaluator confidence as tie-breakers. A completely unresolved tie
-// defaults to 49 solely to respect the no-50 requirement.
 function getNonNeutralTrustScore(weights, providerResults) {
   const providerTrustScores = Object.fromEntries(
     PROVIDERS.map((provider) => [
@@ -146,7 +154,6 @@ function getNonNeutralTrustScore(weights, providerResults) {
     return roundedScore;
   }
 
-  // Preserve the direction of the unrounded weighted result.
   if (rawScore < 50) {
     return 49;
   }
@@ -155,7 +162,6 @@ function getNonNeutralTrustScore(weights, providerResults) {
     return 51;
   }
 
-  // Exact weighted tie: compare supporting and contradicting evidence.
   let supportedWeight = 0;
   let contradictedWeight = 0;
 
@@ -185,7 +191,6 @@ function getNonNeutralTrustScore(weights, providerResults) {
     return 49;
   }
 
-  // If the evidence is tied, use confidence-weighted evaluator judgments.
   const confidenceDirection = PROVIDERS.reduce(
     (total, provider) => {
       const result = providerResults[provider];
@@ -206,8 +211,6 @@ function getNonNeutralTrustScore(weights, providerResults) {
     return 49;
   }
 
-  // The available signals are exactly tied; this is a forced directional
-  // choice, not additional evidence that the text is unreliable.
   return 49;
 }
 
@@ -244,6 +247,57 @@ function validateRequest(answer, weights) {
   return null;
 }
 
+/**
+ * Check balance and charge after a successful evaluation.
+ * Returns { charged, cost, balance_usd } or throws / returns an error response shape.
+ */
+async function chargeUserForInput(userId, characterCount) {
+  if (!supabaseAdmin) {
+    throw new Error('Billing is not configured on the server.');
+  }
+
+  const cost = calculateInputCost(characterCount);
+
+  const { data: wallet, error: walletError } = await supabaseAdmin
+    .from('wallets')
+    .select('balance_usd')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (walletError || !wallet) {
+    throw new Error('Could not load your wallet balance.');
+  }
+
+  const currentBalance = Number(wallet.balance_usd) || 0;
+
+  if (currentBalance < cost) {
+    const err = new Error(
+      `Insufficient balance. This fact-check costs $${cost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`
+    );
+    err.statusCode = 402;
+    err.cost = cost;
+    err.balance_usd = currentBalance;
+    throw err;
+  }
+
+  const newBalance = Math.round((currentBalance - cost) * 10000) / 10000;
+
+  const { error: updateError } = await supabaseAdmin
+    .from('wallets')
+    .update({ balance_usd: newBalance })
+    .eq('user_id', userId);
+
+  if (updateError) {
+    throw new Error('Could not deduct the evaluation cost from your wallet.');
+  }
+
+  return {
+    charged: true,
+    cost_usd: cost,
+    balance_usd: newBalance
+  };
+}
+
 router.post('/', async (req, res) => {
   const { answer, weights } = req.body ?? {};
 
@@ -253,21 +307,49 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: validationError });
   }
 
+  const userId = req.authUser?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      error: 'Please sign in to your Trust AI account.'
+    });
+  }
+
+  // Pre-check balance before spending API credits (same formula, no deduction yet)
+  const inputLength = answer.trim().length;
+  const estimatedCost = calculateInputCost(inputLength);
+
   try {
+    if (supabaseAdmin) {
+      const { data: wallet, error: walletError } = await supabaseAdmin
+        .from('wallets')
+        .select('balance_usd')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (walletError || !wallet) {
+        return res.status(500).json({
+          error: 'Could not load your wallet balance.'
+        });
+      }
+
+      const currentBalance = Number(wallet.balance_usd) || 0;
+
+      if (currentBalance < estimatedCost) {
+        return res.status(402).json({
+          error: `Insufficient balance. This fact-check costs $${estimatedCost.toFixed(4)}. Your balance is $${currentBalance.toFixed(4)}.`,
+          cost_usd: estimatedCost,
+          balance_usd: currentBalance
+        });
+      }
+    }
+
     const providerEntries = await Promise.all(
       PROVIDERS.map(async (provider) => {
         const queryProvider = queryFunctions[provider];
 
-        // Extract claims from the submitted text.
         const claims = await extractClaims(answer, queryProvider);
-
-        // Review the evidence for those claims.
-        const evidence = await verifyEvidence(
-          claims,
-          queryProvider
-        );
-
-        // Preserve the existing evidence validation.
+        const evidence = await verifyEvidence(claims, queryProvider);
         const evidenceScore = calculateEvidenceScore(evidence);
 
         if (evidenceScore === null) {
@@ -276,8 +358,6 @@ router.post('/', async (req, res) => {
           );
         }
 
-        // Score factual reliability and evaluator confidence separately,
-        // after evidence has been reviewed.
         const evaluationScores = await getEvaluatorScores(
           answer,
           evidence,
@@ -298,16 +378,47 @@ router.post('/', async (req, res) => {
 
     const providerResults = Object.fromEntries(providerEntries);
 
-    // Combine the evaluators' individual Trust Scores using the user's weights.
     const trustScore = getNonNeutralTrustScore(
       weights,
       providerResults
     );
 
+    // Charge only after a successful evaluation
+    let billing = {
+      charged: false,
+      cost_usd: estimatedCost,
+      balance_usd: null
+    };
+
+    try {
+      billing = await chargeUserForInput(userId, inputLength);
+    } catch (chargeError) {
+      // Evaluation succeeded but charge failed — still return results,
+      // but surface the billing problem.
+      console.error(
+        'Post-evaluation charge failed:',
+        chargeError instanceof Error ? chargeError.message : chargeError
+      );
+
+      if (chargeError.statusCode === 402) {
+        return res.status(402).json({
+          error: chargeError.message,
+          cost_usd: chargeError.cost,
+          balance_usd: chargeError.balance_usd
+        });
+      }
+    }
+
     const responseData = buildEvaluationResponse({
       trustScore,
       providers: providerResults
     });
+
+    responseData.billing = {
+      cost_usd: billing.cost_usd,
+      balance_usd: billing.balance_usd,
+      charged: billing.charged
+    };
 
     return res.status(200).json(responseData);
   } catch (error) {
