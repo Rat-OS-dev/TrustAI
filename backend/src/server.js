@@ -22,7 +22,7 @@ const supabaseAdmin =
     : null;
 
 app.use(cors());
-app.use(express.json({ limit: '50kb' }));
+app.use(express.json({ limit: '2mb' }));
 
 app.get('/health', (req, res) => {
   res.json({
