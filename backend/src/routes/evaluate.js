@@ -219,8 +219,8 @@ function validateRequest(answer, weights) {
     return 'Please provide text to fact-check.';
   }
 
-  if (answer.length > 1000) {
-    return 'Text must be 1,000 characters or fewer.';
+  if (answer.length > 12000) {
+    return 'Text must be 12,000 characters or fewer.';
   }
 
   if (!weights || typeof weights !== 'object' || Array.isArray(weights)) {

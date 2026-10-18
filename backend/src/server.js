@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
-// Keep the Supabase secret exclusively on the backend.
 const supabaseAdmin =
   SUPABASE_URL && SUPABASE_SECRET_KEY
     ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
@@ -22,7 +21,7 @@ const supabaseAdmin =
     : null;
 
 app.use(cors());
-app.use(express.json({ limit: '20kb' }));
+app.use(express.json({ limit: '50kb' }));
 
 app.get('/health', (req, res) => {
   res.json({
@@ -32,7 +31,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Verify a real Supabase access token for protected endpoints.
 async function requireAuthenticatedUser(req, res, next) {
   if (!supabaseAdmin) {
     return res.status(503).json({
@@ -72,7 +70,6 @@ async function requireAuthenticatedUser(req, res, next) {
   }
 }
 
-// Get the signed-in user's profile and wallet balance.
 app.get('/api/account', requireAuthenticatedUser, async (req, res) => {
   try {
     const userId = req.authUser.id;
@@ -127,7 +124,6 @@ app.get('/api/account', requireAuthenticatedUser, async (req, res) => {
   }
 });
 
-// Update profile details for the signed-in user only.
 app.patch(
   '/api/account/profile',
   requireAuthenticatedUser,
@@ -225,9 +221,6 @@ app.patch(
   }
 );
 
-/**
- * Redeem a promotional code.
- */
 app.post(
   '/api/wallet/redeem-promo',
   requireAuthenticatedUser,
@@ -365,7 +358,6 @@ app.post(
   }
 );
 
-// Fact-checking endpoint — now requires a logged-in user.
 app.use('/api/evaluate', requireAuthenticatedUser, evaluateRouter);
 
 app.listen(PORT, () => {
