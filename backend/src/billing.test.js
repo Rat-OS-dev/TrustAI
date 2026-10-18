@@ -58,12 +58,12 @@ test('fails closed if a model has no configured billing rates', () => {
   );
 });
 
-test('adds 10% to API cost, then another 10% to the subtotal', () => {
-  assert.equal(calculateCustomerPrice(1), 1.21);
+test('applies one 10% markup to API cost', () => {
+  assert.equal(calculateCustomerPrice(1), 1.1);
 });
 
-test('preflight estimate includes both 10% markups', () => {
-  const withMarkups = estimateRequestCost(500, ['gpt-5']);
-  assert.ok(withMarkups > 0);
-  assert.ok(withMarkups / 1.21 > 0);
+test('preflight estimate includes one 10% markup', () => {
+  const estimate = estimateRequestCost(500, ['gpt-5']);
+  assert.ok(estimate > 0);
+  assert.ok(estimate / 1.1 > 0);
 });

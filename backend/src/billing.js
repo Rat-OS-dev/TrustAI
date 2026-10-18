@@ -37,11 +37,9 @@ function roundUsd(value) {
   return Math.round((value + Number.EPSILON) * 1e8) / 1e8;
 }
 
-// Apply the two requested 10% layers separately:
-// first 10% above provider API cost, then 10% on that subtotal.
+// Apply one 10% markup to provider API cost for both estimates and final charges.
 export function calculateCustomerPrice(apiCost) {
-  const apiCostWithFirstMarkup = roundUsd(Math.max(0, Number(apiCost) || 0) * 1.10);
-  return roundUsd(apiCostWithFirstMarkup * 1.10);
+  return roundUsd(Math.max(0, Number(apiCost) || 0) * 1.10);
 }
 
 /**

@@ -407,9 +407,7 @@ router.post('/', async (req, res) => {
         model_count: modelCount,
         pricing_basis: 'provider_reported_tokens',
         api_cost_usd: actualApiCost,
-        api_markup_percent: 10,
-        service_markup_percent: 10,
-        combined_markup_percent: 21,
+        markup_percent: 10,
         api_model_costs_usd: apiModelCosts,
         model_costs_usd: modelCosts,
         usage_by_model: Object.fromEntries(
@@ -454,9 +452,7 @@ router.post('/', async (req, res) => {
       charged: billing.charged,
       model_count: modelCount,
       pricing_basis: billing.pricing_basis,
-      api_markup_percent: billing.api_markup_percent,
-      service_markup_percent: billing.service_markup_percent,
-      combined_markup_percent: billing.combined_markup_percent,
+      markup_percent: billing.markup_percent,
       api_model_costs_usd: billing.api_model_costs_usd,
       model_costs_usd: billing.model_costs_usd,
       usage_by_model: billing.usage_by_model
