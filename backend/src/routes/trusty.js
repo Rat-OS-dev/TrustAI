@@ -7,6 +7,9 @@ import {
   calculateTrustyCustomerPrice,
   getTrustyMarkupPercent
 } from '../billing.js';
+import { MODEL_BY_ID, MAX_MODELS } from '../models.js';
+
+const TRUSTY_MIN_MODELS = 3;
 
 const router = Router();
 const MODEL_SET = [
