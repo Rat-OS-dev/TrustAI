@@ -227,8 +227,8 @@ router.post('/chat', async (req, res) => {
   try {
     const requestedIds = req.body?.modelIds;
     if (requestedIds !== undefined) {
-      if (!Array.isArray(requestedIds) || requestedIds.length < MIN_MODELS || requestedIds.length > MAX_MODELS || new Set(requestedIds).size !== requestedIds.length) {
-        return res.status(400).json({ error: `Choose between ${MIN_MODELS} and ${MAX_MODELS} different models.` });
+      if (!Array.isArray(requestedIds) || requestedIds.length < TRUSTY_MIN_MODELS || requestedIds.length > MAX_MODELS || new Set(requestedIds).size !== requestedIds.length) {
+        return res.status(400).json({ error: `Choose between ${TRUSTY_MIN_MODELS} and ${MAX_MODELS} different models.` });
       }
       selectedModels = requestedIds.map((id) => {
         const model = MODEL_BY_ID[id];
@@ -253,10 +253,10 @@ router.post('/chat', async (req, res) => {
       });
     }
 
-    // Stage 1: all six models independently draft an answer.
+    // Stage 1: all selected models independently draft an answer.
     const drafts = await Promise.all(selectedModels.map(async (model) => {
       const result = await queries[model.id](
-        'You are one of six models powering Trusty, a multi-model assistant. Answer the user helpfully, accurately, and clearly. Use the previous conversation for context. Do not mention internal voting or other models. If uncertain, say so.\n\nConversation:\n' +
+        'You are one of the selected models powering Trusty, a multi-model assistant. Answer the user helpfully, accurately, and clearly. Use the previous conversation for context. Do not mention internal voting or other models. If uncertain, say so.\n\nConversation:\n' +
         chatTranscript + '\n\nWrite your best answer to the latest user message: ' + latestQuestion,
         {
           systemPrompt: 'You are a helpful, accurate, general-purpose AI assistant. Answer directly and naturally. If uncertain, be transparent.',
@@ -266,8 +266,8 @@ router.post('/chat', async (req, res) => {
       return { ...model, response: result };
     }));
 
-    // Stage 2: only after all six drafts finish, expose the complete set to every voter.
-    // Every voter receives every model's ID, name, and full response so the vote is based
+    // Stage 2: only after all selected drafts finish, expose the complete set to every voter.
+    // Every voter receives each model's ID, name, and full response so the vote is based
     // on the actual answer quality rather than a guess or model reputation.
     const draftBlock = drafts.map((d) =>
       `MODEL ID: ${d.id}\nMODEL NAME: ${d.name}\nFULL DRAFT RESPONSE:\n${d.response}`
@@ -276,11 +276,11 @@ router.post('/chat', async (req, res) => {
     await Promise.all(selectedModels.map(async (voter) => {
       const eligibleModels = selectedModels.filter((m) => m.id !== voter.id);
       const voteText = await queries[voter.id](
-        'VOTE AFTER READING THE RESPONSES BELOW. You can see all six full drafts, including the draft written by your own model. Read and compare the actual content of every draft before voting. Evaluate correctness, relevance to the user question, completeness, clear reasoning, appropriate uncertainty, and whether the answer handles disagreements responsibly. Do not choose based on brand reputation or model name alone.\n\n' +
+        'VOTE AFTER READING THE RESPONSES BELOW. You can see all selected full drafts, including the draft written by your own model. Read and compare the actual content of every draft before voting. Evaluate correctness, relevance to the user question, completeness, clear reasoning, appropriate uncertainty, and whether the answer handles disagreements responsibly. Do not choose based on brand reputation or model name alone.\n\n' +
         'Your voter model ID is: ' + voter.id + '. You are forbidden from voting for your own model. You must select exactly one DIFFERENT model from this eligible list: ' +
         eligibleModels.map((m) => m.id + ' (' + m.name + ')').join(', ') +
         '.\n\nReturn ONLY valid JSON with the exact schema {"vote":"eligible-model-id"}. The vote must exactly match one ID in the eligible list.\n\nUSER QUESTION:\n' +
-        latestQuestion + '\n\nALL SIX FULL MODEL RESPONSES (read each before choosing):\n\n' + draftBlock,
+        latestQuestion + '\n\nALL SELECTED FULL MODEL RESPONSES (read each before choosing):\n\n' + draftBlock,
         {
           systemPrompt: 'You are an impartial evaluator selecting the best answer synthesizer. Read the complete candidate responses provided by the user message. Compare their substance, then cast one valid vote for a model other than yourself. Return only the requested JSON.',
           maxOutputTokens: 120
@@ -299,7 +299,7 @@ router.post('/chat', async (req, res) => {
     // Stage 3: the winning model combines the useful parts of all six drafts.
     const finalAnswer = await queries[winnerId](
       'You are Trusty, the final synthesizer selected by a vote among six AI models. Produce one polished, direct answer to the user. Combine the strongest useful information from all six drafts, reconcile contradictions, remove repetition, and do not claim consensus when drafts disagree. Do not mention this internal process unless the user asks. Preserve useful caveats.\n\nConversation context:\n' +
-      chatTranscript + '\n\nLatest user question:\n' + latestQuestion + '\n\nSix drafts to synthesize:\n' + draftBlock,
+      chatTranscript + '\n\nLatest user question:\n' + latestQuestion + '\n\nSelected drafts to synthesize:\n' + draftBlock,
       {
         systemPrompt: 'You are Trusty, a helpful general-purpose AI assistant. Synthesize the best parts of all supplied drafts into one polished answer.',
         maxOutputTokens: 2000
