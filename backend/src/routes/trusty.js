@@ -49,8 +49,8 @@ function transcript(messages) {
   return messages.map((m) => `${m.role === 'user' ? 'User' : 'Trusty'}: ${m.content}`).join('\n\n');
 }
 
-function parseVote(response, voterId) {
-  const candidateIds = MODEL_SET.map((m) => m.id).filter((id) => id !== voterId);
+function parseVote(response, voterId, modelSet = MODEL_SET) {
+  const candidateIds = modelSet.map((m) => m.id).filter((id) => id !== voterId);
   let parsed = null;
   const raw = String(response || '').trim();
   try {
@@ -71,8 +71,8 @@ function parseVote(response, voterId) {
   return explicit && candidateIds.includes(explicit[1]) ? explicit[1] : null;
 }
 
-function getTieWinners(votes) {
-  const counts = Object.fromEntries(MODEL_SET.map((model) => [model.id, 0]));
+function getTieWinners(votes, modelSet = MODEL_SET) {
+  const counts = Object.fromEntries(modelSet.map((model) => [model.id, 0]));
   for (const vote of Object.values(votes)) counts[vote] += 1;
   const high = Math.max(...Object.values(counts));
   return { counts, tied: Object.keys(counts).filter((id) => counts[id] === high) };
@@ -86,16 +86,16 @@ async function getWallet(userId) {
   return Number(data.balance_usd) || 0;
 }
 
-function estimateTrustyReservation(transcriptText, latestQuestion) {
+function estimateTrustyReservation(transcriptText, latestQuestion, modelSet = MODEL_SET) {
   // Conservative preflight bound so a low wallet balance is rejected before API usage.
   const tokens = (chars) => Math.ceil(Math.max(0, chars) / 2) + 512;
   const draftChars = ('Conversation: ' + transcriptText + ' Latest question: ' + latestQuestion).length;
-  const allDraftsChars = MODEL_SET.length * 1200 * 8 + 1000;
+  const allDraftsChars = modelSet.length * 1200 * 8 + 1000;
   const voteChars = 1800 + latestQuestion.length + allDraftsChars;
   const synthesisChars = 1800 + transcriptText.length + latestQuestion.length + allDraftsChars;
   let total = 0;
   let synthesisMax = 0;
-  for (const model of MODEL_SET) {
+  for (const model of modelSet) {
     total += calculateModelUsageCost(model.id, { input_tokens: tokens(draftChars), output_tokens: 1200 });
     total += calculateModelUsageCost(model.id, { input_tokens: tokens(voteChars), output_tokens: 1600 });
     synthesisMax = Math.max(synthesisMax, calculateModelUsageCost(model.id, { input_tokens: tokens(synthesisChars), output_tokens: 2000 }));
@@ -223,7 +223,19 @@ router.post('/chat', async (req, res) => {
   if (!userId) return res.status(401).json({ error: 'Please sign in to use Trusty.' });
 
   let messages;
+  let selectedModels = MODEL_SET;
   try {
+    const requestedIds = req.body?.modelIds;
+    if (requestedIds !== undefined) {
+      if (!Array.isArray(requestedIds) || requestedIds.length < MIN_MODELS || requestedIds.length > MAX_MODELS || new Set(requestedIds).size !== requestedIds.length) {
+        return res.status(400).json({ error: `Choose between ${MIN_MODELS} and ${MAX_MODELS} different models.` });
+      }
+      selectedModels = requestedIds.map((id) => {
+        const model = MODEL_BY_ID[id];
+        if (!model) throw new Error('One of the selected Trusty models is not supported.');
+        return { id: model.id, name: model.name, family: model.family };
+      });
+    }
     messages = cleanMessages(req.body?.messages);
   } catch (error) {
     return res.status(400).json({ error: error.message });
@@ -231,10 +243,10 @@ router.post('/chat', async (req, res) => {
 
   try {
     const startingBalance = await getWallet(userId);
-    const queries = Object.fromEntries(MODEL_SET.map((model) => [model.id, makeQueryFunction(model.id)]));
+    const queries = Object.fromEntries(selectedModels.map((model) => [model.id, makeQueryFunction(model.id)]));
     const chatTranscript = transcript(messages);
     const latestQuestion = messages[messages.length - 1].content;
-    const requiredReserve = estimateTrustyReservation(chatTranscript, latestQuestion);
+    const requiredReserve = estimateTrustyReservation(chatTranscript, latestQuestion, selectedModels);
     if (startingBalance + 1e-10 < requiredReserve) {
       return res.status(402).json({
         error: 'Your wallet needs about $' + requiredReserve.toFixed(4) + ' available before Trusty can start this message. This is a temporary safety estimate; you are charged only for reported API usage. Add funds and try again.'
@@ -242,7 +254,7 @@ router.post('/chat', async (req, res) => {
     }
 
     // Stage 1: all six models independently draft an answer.
-    const drafts = await Promise.all(MODEL_SET.map(async (model) => {
+    const drafts = await Promise.all(selectedModels.map(async (model) => {
       const result = await queries[model.id](
         'You are one of six models powering Trusty, a multi-model assistant. Answer the user helpfully, accurately, and clearly. Use the previous conversation for context. Do not mention internal voting or other models. If uncertain, say so.\n\nConversation:\n' +
         chatTranscript + '\n\nWrite your best answer to the latest user message: ' + latestQuestion,
@@ -261,8 +273,8 @@ router.post('/chat', async (req, res) => {
       `MODEL ID: ${d.id}\nMODEL NAME: ${d.name}\nFULL DRAFT RESPONSE:\n${d.response}`
     ).join('\n\n================ MODEL RESPONSE ================\n\n');
     const votes = {};
-    await Promise.all(MODEL_SET.map(async (voter) => {
-      const eligibleModels = MODEL_SET.filter((m) => m.id !== voter.id);
+    await Promise.all(selectedModels.map(async (voter) => {
+      const eligibleModels = selectedModels.filter((m) => m.id !== voter.id);
       const voteText = await queries[voter.id](
         'VOTE AFTER READING THE RESPONSES BELOW. You can see all six full drafts, including the draft written by your own model. Read and compare the actual content of every draft before voting. Evaluate correctness, relevance to the user question, completeness, clear reasoning, appropriate uncertainty, and whether the answer handles disagreements responsibly. Do not choose based on brand reputation or model name alone.\n\n' +
         'Your voter model ID is: ' + voter.id + '. You are forbidden from voting for your own model. You must select exactly one DIFFERENT model from this eligible list: ' +
@@ -274,15 +286,15 @@ router.post('/chat', async (req, res) => {
           maxOutputTokens: 120
         }
       );
-      const vote = parseVote(voteText, voter.id);
+      const vote = parseVote(voteText, voter.id, selectedModels);
       if (!vote) throw new Error(`The vote from ${voter.name} was invalid or attempted a forbidden self-vote.`);
       votes[voter.id] = vote;
     }));
 
-    const { counts, tied } = getTieWinners(votes);
+    const { counts, tied } = getTieWinners(votes, selectedModels);
     const tieBreakUsed = tied.length > 1;
     const winnerId = tied.length === 1 ? tied[0] : tied[randomInt(tied.length)];
-    const winner = MODEL_SET.find((model) => model.id === winnerId);
+    const winner = selectedModels.find((model) => model.id === winnerId);
 
     // Stage 3: the winning model combines the useful parts of all six drafts.
     const finalAnswer = await queries[winnerId](
@@ -297,7 +309,7 @@ router.post('/chat', async (req, res) => {
     // Bill provider-reported token usage at configured API rates plus Trusty's tiered markup.
     const usageByModel = {};
     let apiCost = 0;
-    for (const model of MODEL_SET) {
+    for (const model of selectedModels) {
       const usage = queries[model.id].getUsage();
       if (!usage.complete || usage.requests < 2 || !Number.isFinite(usage.input_tokens) ||
           !Number.isFinite(usage.output_tokens)) {
@@ -319,15 +331,16 @@ router.post('/chat', async (req, res) => {
       markup_percent: markupPercent,
       answer: finalAnswer,
       synthesizer: { id: winner.id, name: winner.name },
-      votes: MODEL_SET.map((model) => ({
+      votes: selectedModels.map((model) => ({
         voter: model.name,
-        votedFor: MODEL_SET.find((candidate) => candidate.id === votes[model.id])?.name || votes[model.id]
+        votedFor: selectedModels.find((candidate) => candidate.id === votes[model.id])?.name || votes[model.id]
       })),
-      voteCounts: Object.fromEntries(MODEL_SET.map((model) => [model.name, counts[model.id]])),
+      voteCounts: Object.fromEntries(selectedModels.map((model) => [model.name, counts[model.id]])),
       tieBreakUsed,
       cost_usd: charge.cost_usd,
       balance_usd: charge.balance_usd,
-      billing: 'Reported API token usage at configured provider rates plus Trusty markup (20% when API cost is $0.20 or less; 10% above $0.20).'
+      models_used: selectedModels.map((model) => ({ id: model.id, name: model.name })),
+      billing: 'Reported API token usage at configured provider rates plus Trusty markup (20% when raw API cost is $0.20 or less; 10% above $0.20).'
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Trusty error';
