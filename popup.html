@@ -21,7 +21,7 @@ label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-
 <nav class="tabs" aria-label="Trust AI sections"><button class="tab active" data-view="trustyView">Trusty</button><button class="tab" data-view="modelsView">Trust AI</button><button class="tab" data-view="accountView">Account</button></nav>
 
 <section class="view active" id="trustyView">
-  <h2>Trusty</h2><p class="desc">Your main AI chat. Six models draft answers, vote, and one synthesizes the response.</p>
+  <h2>Trusty</h2><p class="desc">Your main AI chat. Selected AI models draft answers, vote, and one synthesizes the response.</p><p class="tiny">When you send a prompt, it is securely sent to Trust AI and selected AI providers to generate a reply. Avoid entering sensitive personal information.</p>
   <div id="trustyMessages" class="panel" style="height:245px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere"><span class="muted">Welcome to Trusty. Ask a question to get started.</span></div>
   <div class="field"><label for="trustyPrompt">MESSAGE TRUSTY</label><textarea id="trustyPrompt" maxlength="8000" style="height:74px" placeholder="Ask Trusty anything…"></textarea></div>
   <button class="btn primary" id="trustySend">Send to Trusty</button>
@@ -30,7 +30,7 @@ label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-
 </section>
 
 <section class="view" id="checkView">
-  <h2>Trust AI answer checker</h2><p class="desc">Highlight an answer on the page, or paste it below. Review it before checking.</p><button class="btn secondary" id="changeModels">← Choose different models</button>
+  <h2>Trust AI answer checker</h2><p class="desc">Highlight an answer on the page, or paste it below. Review it before checking.</p><p class="tiny">When you run a check, the answer text is securely sent to Trust AI and selected AI providers for evaluation. Only the text you choose to submit is processed.</p><button class="btn secondary" id="changeModels">← Choose different models</button>
   <div class="field"><label for="answerText">ANSWER TEXT</label><textarea id="answerText" maxlength="12000" placeholder="Paste the AI answer here…"></textarea></div>
   <div class="inline"><button class="btn" id="loadSelection">Load highlighted text</button><button class="btn" id="clearAnswer">Clear</button></div>
   <div class="panel" style="margin-top:10px"><div class="section-heading" style="margin-top:0"><h3>ESTIMATED CHECK PRICE</h3><span class="pill" id="modelCount">2 models</span></div><div class="price" id="costPreview">$—</div><div class="tiny">Estimate only. The backend calculates the actual charge after checking.</div></div>
@@ -90,6 +90,6 @@ label{display:block;font-size:11px;font-weight:700;margin:0 0 6px}.field{margin-
     <button class="btn secondary" id="logoutButton">Log out</button>
   </div>
 </section>
-<div class="footer">Review first · Evidence and funds open on the website</div>
+<div class="footer">Review first · Evidence and funds open on the website · <a href="https://rat-os-dev.github.io/TrustAI/privacy.html" target="_blank" rel="noreferrer" style="color:var(--mint)">Privacy policy</a></div>
 <script src="popup.js"></script>
 </body></html>
