@@ -1,0 +1,88 @@
+name: Package Chrome Extension
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'manifest.json'
+      - 'popup.html'
+      - 'popup.js'
+      - 'background.js'
+      - 'privacy.html'
+      - '.github/workflows/extension-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Build clean Chrome Web Store package
+        run: |
+          python - <<'PY'
+          import json, os, shutil, zipfile
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          root = Path.cwd()
+          out = root / "extension-package"
+          if out.exists():
+              shutil.rmtree(out)
+          out.mkdir()
+          required = ["manifest.json", "popup.html", "popup.js", "background.js"]
+          for name in required:
+              if not (root / name).is_file():
+                  raise SystemExit(f"Missing required extension file: {name}")
+          manifest = json.loads((root / "manifest.json").read_text())
+          if manifest.get("manifest_version") != 3:
+              raise SystemExit("Expected Manifest V3.")
+          manifest["icons"] = {size: f"icons/icon{size}.png" for size in (16, 32, 48, 128)}
+          manifest["action"]["default_icon"] = {size: f"icons/icon{size}.png" for size in (16, 32, 48)}
+          (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+          for name in required[1:]:
+              shutil.copy2(root / name, out / name)
+          icons = out / "icons"
+          icons.mkdir()
+          for size in (16, 32, 48, 128):
+              im = Image.new("RGBA", (size, size), (11, 18, 32, 255))
+              d = ImageDraw.Draw(im)
+              pad = max(1, size // 10)
+              d.rounded_rectangle((pad, pad, size-pad-1, size-pad-1), radius=max(2, size//5), fill=(21,59,53,255), outline=(102,224,183,255), width=max(1,size//32))
+              # Simple shield with a check mark, scaled to the canvas.
+              pts = [(size*.5,size*.18),(size*.78,size*.29),(size*.75,size*.56),(size*.64,size*.74),(size*.5,size*.83),(size*.36,size*.74),(size*.25,size*.56),(size*.22,size*.29)]
+              d.line(pts+[pts[0]], fill=(102,224,183,255), width=max(1,size//13), joint="curve")
+              d.line([(size*.34,size*.5),(size*.46,size*.61),(size*.67,size*.39)], fill=(244,247,252,255), width=max(1,size//10), joint="curve")
+              im.save(icons / f"icon{size}.png")
+          with zipfile.ZipFile(root / "trust-ai-chrome-extension.zip", "w", zipfile.ZIP_DEFLATED) as z:
+              for file in sorted(out.rglob("*")):
+                  if file.is_file():
+                      z.write(file, file.relative_to(out).as_posix())
+          with zipfile.ZipFile(root / "trust-ai-chrome-extension.zip") as z:
+              names = z.namelist()
+              if "manifest.json" not in names or any(n.startswith("/") or ".." in Path(n).parts for n in names):
+                  raise SystemExit("Package validation failed.")
+              parsed = json.loads(z.read("manifest.json"))
+              for path in [parsed["background"]["service_worker"], parsed["action"]["default_popup"]]:
+                  if path not in names:
+                      raise SystemExit(f"Manifest references missing file: {path}")
+          print("Created trust-ai-chrome-extension.zip")
+          print("Package contents:")
+          with zipfile.ZipFile(root / "trust-ai-chrome-extension.zip") as z:
+              print("\n".join(z.namelist()))
+          PY
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      - name: Upload installable extension ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-ai-chrome-extension
+          path: trust-ai-chrome-extension.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload listing icons
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-ai-store-icons
+          path: extension-package/icons/
+          if-no-files-found: error
+          retention-days: 30
