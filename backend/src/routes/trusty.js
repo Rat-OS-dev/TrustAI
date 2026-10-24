@@ -278,12 +278,23 @@ router.post('/chat', async (req, res) => {
     const votes = {};
     await Promise.all(selectedModels.map(async (voter) => {
       const eligibleModels = selectedModels.filter((m) => m.id !== voter.id);
+      // Randomize presentation order independently for each voter. Keeping the
+      // same fixed order can create position/recency bias that unfairly favors
+      // whichever model's draft appears last.
+      const voterDrafts = [...drafts];
+      for (let i = voterDrafts.length - 1; i > 0; i -= 1) {
+        const j = randomInt(i + 1);
+        [voterDrafts[i], voterDrafts[j]] = [voterDrafts[j], voterDrafts[i]];
+      }
+      const voterDraftBlock = voterDrafts.map((d) =>
+        `MODEL ID: ${d.id}\nMODEL NAME: ${d.name}\nFULL DRAFT RESPONSE:\n${d.response}`
+      ).join('\n\n================ MODEL RESPONSE ================\n\n');
       const voteText = await queries[voter.id](
         'VOTE AFTER READING THE RESPONSES BELOW. You can see all selected full drafts, including the draft written by your own model. Read and compare the actual content of every draft before voting. Evaluate correctness, relevance to the user question, completeness, clear reasoning, appropriate uncertainty, and whether the answer handles disagreements responsibly. Do not choose based on brand reputation or model name alone.\n\n' +
         'Your voter model ID is: ' + voter.id + '. You are forbidden from voting for your own model. You must select exactly one DIFFERENT model from this eligible list: ' +
         eligibleModels.map((m) => m.id + ' (' + m.name + ')').join(', ') +
         '.\n\nReturn ONLY valid JSON with the exact schema {"vote":"eligible-model-id"}. The vote must exactly match one ID in the eligible list.\n\nUSER QUESTION:\n' +
-        latestQuestion + '\n\nALL SELECTED FULL MODEL RESPONSES (read each before choosing):\n\n' + draftBlock,
+        latestQuestion + '\n\nALL SELECTED FULL MODEL RESPONSES IN RANDOMIZED ORDER (read each before choosing):\n\n' + voterDraftBlock,
         {
           systemPrompt: 'You are an impartial evaluator selecting the best answer synthesizer. Read the complete candidate responses provided by the user message. Compare their substance, then cast one valid vote for a model other than yourself. Return only the requested JSON.',
           maxOutputTokens: 120
