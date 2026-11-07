@@ -68,8 +68,8 @@
           </div>
           <div class="stats-row">
             <div class="stat-card"><div class="stat-label">Current plan</div><div class="stat-value" id="stat-plan">Free</div></div>
+            <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value" id="stat-balance">$0.00</div></div>
             <div class="stat-card"><div class="stat-label">Wallet</div><div class="stat-value mono" id="stat-wallet">—</div></div>
-            <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">Trust AI · Zap</div></div>
           </div>
         </section>
 
@@ -92,10 +92,36 @@
 
         <section class="view" id="view-billing">
           <h2>Subscription & Billing</h2>
-          <p class="view-sub">Upgrade or change your plan. One subscription covers Trust AI and Zap.</p>
+          <p class="view-sub">Upgrades charge immediately. Downgrades/cancels keep your current plan until the period ends. Renewals charge at the exact second you subscribed, every month.</p>
+
           <div class="current-plan-banner" id="current-plan-banner">
             You are on the <strong id="banner-plan">Free</strong> plan.
           </div>
+
+          <div class="stats-row" style="margin-bottom:1.5rem">
+            <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value" id="billing-balance">$0.00</div></div>
+            <div class="stat-card"><div class="stat-label">Period started</div><div class="stat-value" id="billing-period-start" style="font-size:0.85rem">—</div></div>
+            <div class="stat-card"><div class="stat-label">Next charge</div><div class="stat-value" id="billing-next" style="font-size:0.85rem">—</div></div>
+          </div>
+
+          <div class="form-card" style="margin-bottom:1.5rem;max-width:100%">
+            <div class="field">
+              <label>Pending plan change</label>
+              <div id="billing-pending" class="muted">None</div>
+            </div>
+            <button class="btn btn-ghost" id="btn-cancel-pending" type="button">Cancel pending change</button>
+          </div>
+
+          <div class="form-card" style="margin-bottom:1.5rem">
+            <h3 style="margin:0 0 0.5rem;font-size:1rem">Add funds</h3>
+            <p class="view-sub" style="margin-bottom:0.75rem">You need enough balance to upgrade or renew. (Demo top-up for testing.)</p>
+            <div class="field">
+              <label for="add-funds-amount">Amount (USD)</label>
+              <input type="number" id="add-funds-amount" min="1" step="0.01" placeholder="50" />
+            </div>
+            <button class="btn btn-primary" id="btn-add-funds" type="button">Add to balance</button>
+          </div>
+
           <div class="plan-grid billing">
             <div class="plan-card" data-plan="free">
               <div class="plan-badge">Free</div>
@@ -120,7 +146,7 @@
 
         <section class="view" id="view-settings">
           <h2>Settings</h2>
-          <p class="view-sub">Preferences for both Trust AI and Zap.</p>
+          <p class="view-sub">Preferences for both Trust AI and Zap. Changes save immediately.</p>
           <div class="form-card">
             <div class="toggle-row">
               <div><strong>Email notifications</strong><p>Product updates and security alerts</p></div>
